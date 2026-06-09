@@ -1,0 +1,17 @@
+﻿# Python virtual environments
+.venv/
+__pycache__/
+*.pyc
+
+# Local databases and runtime stores
+data/
+chroma_storage/
+neo4j_data/
+
+# Environment configurations containing sensitive keys
+.env
+config/.env
+
+# Local document inputs/outputs
+*.pdf
+processed_chunks/
