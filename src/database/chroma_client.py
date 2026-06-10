@@ -8,41 +8,41 @@ load_dotenv(dotenv_path = os.path.join(os.path.dirname(__file__), "../../config/
 
 class ChromaVectorClient:
     def __init__ (self, collection_name: str = "self_healing_rag_docs"):
-        #Retrieve target storage vriables from the environment
+        #Retrieve target storage variables from the environment
         db_path = os.getenv("CHROMA_DB_PATH", "./chroma_storage")
         #the embedding model that we are going to use
         model_name = os.getenv("EMBEDDING_MODEL", "gemini-embedding-2-preview")
         print(f"[*] Initializing Google Generative AI Embeddings: {model_name}...")
-        self.emebddings = GoogleGenerativeAIEmbeddings(
+        self.embeddings = GoogleGenerativeAIEmbeddings(  # FIX: was self.emebddings (typo)
             model=model_name,
             google_api_key=os.getenv("GOOGLE_API_KEY")
         )
 
         print(f"[*] Connecting to ChromaDB at {db_path}...")
         #connect the LangChain Chroma wrapper to persistent storage
-        self.client = Chroma(
+        self.vector_store = Chroma(  # FIX: was self.client — but get_retriever() calls self.vector_store
             collection_name=collection_name,
-            embedding_function=self.emebddings,
+            embedding_function=self.embeddings,  # FIX: was self.emebddings (typo)
             persist_directory=db_path
         )
-    
+
     def add_documents(self, finalized_chunks: List[Dict[str, Any]]):
         """Embeds full context payloads and stores them inside
         the local Chroma vector indices database instance"""
-        print(f"[*]Vectorizing and uploading {len(finalized_chunks}")} structural chunks to Chroma DB ...")
-        texts = [chunks["page_content"] for chunk in finlize_chunks]
-        metadatas = [chunks["metadata"]["chunk_id"] for chunk in finalized_chunks]
+        print(f"[*] Vectorizing and uploading {len(finalized_chunks)} structural chunks to Chroma DB ...")  # FIX: was len(finalized_chunks)"} — misplaced quote and brace
+        texts = [chunk["page_content"] for chunk in finalized_chunks]        # FIX: was chunks[...] and finlize_chunks (wrong var names)
+        metadatas = [chunk["metadata"] for chunk in finalized_chunks]         # FIX: was chunks["metadata"]["chunk_id"] — metadatas must be full dicts, not strings
+        ids = [chunk["metadata"]["chunk_id"] for chunk in finalized_chunks]   # FIX: ids was referenced but never defined
 
         #execute batch upload and vector computation
-        self.vector_store.add_texts(texts=texts, metadatas=metadatas, ids= ids)
+        self.vector_store.add_texts(texts=texts, metadatas=metadatas, ids=ids)  # FIX: was self.client (renamed to self.vector_store)
         print("[*] Chroma DB indexing successfully accomplished")
-    
+
     def get_retriever(self, search_kwargs: Dict[str, Any]=None):
-        """returns a standarzed LangChain Retreiver interface."""
+        """returns a standardized LangChain Retriever interface."""
         if search_kwargs is None:
-            search_kwargs = {"k": 15} #default to retrieving top 5 most relevant chunks
+            search_kwargs = {"k": 5}  # FIX: comment said top 5 but default was 15
         return self.vector_store.as_retriever(
-            search_type= "similarity",
+            search_type="similarity",
             search_kwargs=search_kwargs
-            )
-    
+        )
