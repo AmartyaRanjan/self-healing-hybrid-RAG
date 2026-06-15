@@ -17,8 +17,8 @@ llm = ChatGoogleGenerativeAI(
 
 def decide_to_generate(state: RAGState) -> Literal["generate", "web_search"]:
     """
-    Evaluates context viability. Routes to 'web_search' escape hatch if documents 
-    list is missing or the highest cross-encoder score indicates irrelevant noise.
+    Evaluates context viability across disparate dictionary structures and LangChain Document 
+    objects. Routes to 'web_search' if the highest context score indicates irrelevant noise.
     """
     print("[*] Edge Evaluator: Assessing document context payload density...")
     docs = state.get("documents", [])
@@ -27,12 +27,20 @@ def decide_to_generate(state: RAGState) -> Literal["generate", "web_search"]:
         print("[➔] Decision: Document payload empty. Routing to Fallback Web Search.")
         return "web_search"
     
-    # CRITICAL FALLBACK GATE: Check the best available re-ranking score
-    best_score = docs[0].get("score", -99.0)
+    # Extract the leading context item
+    best_doc = docs[0]
+    best_score = -99.0
+    
+    # FIXED: Support both dictionary schemas and LangChain Document objects seamlessly
+    if hasattr(best_doc, "metadata"):  # LangChain Document Object
+        best_score = best_doc.metadata.get("score", -99.0)
+    elif isinstance(best_doc, dict):    # Standard Python Dictionary
+        best_score = best_doc.get("score", -99.0)
+        
     CRITICAL_SCORE_FLOOR = -3.0
     
     if best_score < CRITICAL_SCORE_FLOOR:
-        print(f"[!] Edge Evaluator: Best chunk score ({best_score:.4f}) is below acceptable floor. Triggering Escape Hatch!")
+        print(f"[!] Edge Evaluator: Best chunk score ({best_score:.4f}) is below acceptable floor ({CRITICAL_SCORE_FLOOR}). Triggering Escape Hatch!")
         return "web_search"
         
     print(f"[➔] Decision: Valid context identified (Score: {best_score:.4f}). Routing to Generation Node.")
@@ -49,7 +57,15 @@ def grade_generation_v_documents(state: RAGState) -> Literal["useful", "not usef
     if not generation:
         return "not useful"
     
-    context_text = "\n\n".join([doc["page_content"] for doc in documents]) if documents else "No context available."
+    # Standardize string compilation for validation
+    context_blocks = []
+    for doc in documents:
+        if hasattr(doc, "page_content"):
+            context_blocks.append(doc.page_content)
+        elif isinstance(doc, dict):
+            context_blocks.append(doc.get("page_content", ""))
+            
+    context_text = "\n\n".join(context_blocks) if context_blocks else "No context available."
     
     grading_prompt = ChatPromptTemplate.from_messages([
         ("system", (
