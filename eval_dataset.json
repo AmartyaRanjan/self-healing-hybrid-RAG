@@ -1,0 +1,127 @@
+[
+  {
+    "query": "What is the concept of a relation in mathematics?",
+    "ground_truth_chunk_keyword": "relation",
+    "expected_answer_keywords": ["ordered pair", "relation", "set", "Cartesian product"]
+  },
+  {
+    "query": "What is the domain of a relation and how is it defined?",
+    "ground_truth_chunk_keyword": "domain",
+    "expected_answer_keywords": ["domain", "first element", "ordered pair", "set"]
+  },
+  {
+    "query": "What is the difference between a relation and a function?",
+    "ground_truth_chunk_keyword": "function",
+    "expected_answer_keywords": ["function", "relation", "unique", "every element"]
+  },
+  {
+    "query": "What is an empty relation?",
+    "ground_truth_chunk_keyword": "empty relation",
+    "expected_answer_keywords": ["empty", "relation", "no element", "subset"]
+  },
+  {
+    "query": "What is the range of a relation?",
+    "ground_truth_chunk_keyword": "range",
+    "expected_answer_keywords": ["range", "second element", "ordered pair", "codomain"]
+  },
+  {
+    "query": "What is the Cartesian product of two sets?",
+    "ground_truth_chunk_keyword": "Cartesian product",
+    "expected_answer_keywords": ["Cartesian product", "ordered pairs", "set A", "set B"]
+  },
+  {
+    "query": "How many elements does a Cartesian product A x B contain if A has m elements and B has n elements?",
+    "ground_truth_chunk_keyword": "m x n",
+    "expected_answer_keywords": ["mn", "m x n", "m*n", "elements"]
+  },
+  {
+    "query": "What is a reflexive relation?",
+    "ground_truth_chunk_keyword": "reflexive",
+    "expected_answer_keywords": ["reflexive", "every element", "itself", "(a, a)"]
+  },
+  {
+    "query": "Explain the discovery of the electron and who discovered it.",
+    "ground_truth_chunk_keyword": "electron",
+    "expected_answer_keywords": ["Thomson", "electron", "cathode", "J.J."]
+  },
+  {
+    "query": "What was Rutherford's experiment and what did it prove?",
+    "ground_truth_chunk_keyword": "Rutherford",
+    "expected_answer_keywords": ["Rutherford", "gold foil", "alpha particle", "nucleus"]
+  },
+  {
+    "query": "What is the Bohr model of the atom?",
+    "ground_truth_chunk_keyword": "Bohr",
+    "expected_answer_keywords": ["Bohr", "orbit", "energy level", "electron"]
+  },
+  {
+    "query": "What are quantum numbers and what do they represent?",
+    "ground_truth_chunk_keyword": "quantum number",
+    "expected_answer_keywords": ["quantum number", "principal", "azimuthal", "magnetic", "spin"]
+  },
+  {
+    "query": "What is the Aufbau principle for filling electrons?",
+    "ground_truth_chunk_keyword": "Aufbau",
+    "expected_answer_keywords": ["Aufbau", "lowest energy", "filling", "orbital"]
+  },
+  {
+    "query": "What are isotopes?",
+    "ground_truth_chunk_keyword": "isotope",
+    "expected_answer_keywords": ["isotope", "same element", "different neutrons", "atomic number"]
+  },
+  {
+    "query": "What is electromagnetic radiation and what are its properties?",
+    "ground_truth_chunk_keyword": "electromagnetic",
+    "expected_answer_keywords": ["electromagnetic", "wavelength", "frequency", "radiation"]
+  },
+  {
+    "query": "What is the periodic law in chemistry?",
+    "ground_truth_chunk_keyword": "periodic law",
+    "expected_answer_keywords": ["periodic law", "atomic number", "properties", "elements"]
+  },
+  {
+    "query": "Who developed the modern periodic table?",
+    "ground_truth_chunk_keyword": "Mendeleev",
+    "expected_answer_keywords": ["Mendeleev", "periodic", "table", "atomic"]
+  },
+  {
+    "query": "What are periods and groups in the periodic table?",
+    "ground_truth_chunk_keyword": "period",
+    "expected_answer_keywords": ["period", "group", "row", "column", "periodic table"]
+  },
+  {
+    "query": "What are s-block elements?",
+    "ground_truth_chunk_keyword": "s-block",
+    "expected_answer_keywords": ["s-block", "alkali", "alkaline", "group 1", "group 2"]
+  },
+  {
+    "query": "What is atomic radius and how does it change across a period?",
+    "ground_truth_chunk_keyword": "atomic radius",
+    "expected_answer_keywords": ["atomic radius", "decreases", "period", "nuclear charge"]
+  },
+  {
+    "query": "What is ionization energy and what factors affect it?",
+    "ground_truth_chunk_keyword": "ionization energy",
+    "expected_answer_keywords": ["ionization energy", "electron", "remove", "increases"]
+  },
+  {
+    "query": "What are noble gases and why are they inert?",
+    "ground_truth_chunk_keyword": "noble gas",
+    "expected_answer_keywords": ["noble gas", "inert", "complete", "octet", "stable"]
+  },
+  {
+    "query": "What is electronegativity and how does it trend across periods?",
+    "ground_truth_chunk_keyword": "electronegativity",
+    "expected_answer_keywords": ["electronegativity", "electron", "attract", "increases", "period"]
+  },
+  {
+    "query": "What is an LLM fine-tuning pipeline and what hardware is required?",
+    "ground_truth_chunk_keyword": "fine-tuning",
+    "expected_answer_keywords": ["fine-tuning", "GPU", "VRAM", "training", "model"]
+  },
+  {
+    "query": "What is the objective of the hardened 3-day LLM alignment plan?",
+    "ground_truth_chunk_keyword": "alignment",
+    "expected_answer_keywords": ["alignment", "academic", "pipeline", "plagiarism", "8B"]
+  }
+]

@@ -1,4 +1,4 @@
-﻿import os
+import os
 import sys
 from dotenv import load_dotenv
 
@@ -9,7 +9,8 @@ from src.graph_engine.workflow import app
 from src.database.graph_client import Neo4jGraphClient
 from langchain_core.documents import Document
 
-load_dotenv(dotenv_path="config/.env")
+dotenv_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config", ".env")
+load_dotenv(dotenv_path=dotenv_path)
 
 class HybridGraphRAGAgent:
     def __init__(self):
@@ -48,7 +49,7 @@ class HybridGraphRAGAgent:
         Performs parallel retrieval extraction and injects the fused context 
         into the LangGraph self-correcting execution state loop.
         """
-        print(f"\n[🚀] User Query Received: '{user_query}'")
+        print(f"\n[*] User Query Received: '{user_query}'")
         
         # 1. Fetch relational graph structures explicitly from Neo4j
         graph_triples = self.fetch_graph_context(graph_keyword)

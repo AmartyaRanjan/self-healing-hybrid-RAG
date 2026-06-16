@@ -1,4 +1,4 @@
-﻿import os
+import os
 import sys
 import json
 import asyncio
@@ -16,7 +16,8 @@ from langchain_community.tools import DuckDuckGoSearchRun
 from langchain_community.utilities import DuckDuckGoSearchAPIWrapper
 from langchain_core.documents import Document
 
-load_dotenv(dotenv_path=os.getenv("DOTENV_PATH", "config/.env"))
+default_dotenv = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../config/.env")
+load_dotenv(dotenv_path=os.getenv("DOTENV_PATH", os.path.normpath(default_dotenv)))
 
 class QueryDecompositionEngine:
     def __init__(self):
@@ -99,7 +100,7 @@ class QueryTransformEngine:
         try:
             cleaned = raw_output.replace("```json", "").replace("```", "").strip()
             parsed = json.loads(cleaned)
-            print(f"[➔] Transformation Reasoning: {parsed.get('reasoning')}")
+            print(f"[->] Transformation Reasoning: {parsed.get('reasoning')}")
             print(f"[+] Transformed Search Query: '{parsed.get('optimized_query')}'")
             return parsed
         except Exception as e:
@@ -128,6 +129,11 @@ class PrecisionRetrievalEngine:
         retriever = self.chroma_client.get_retriever(search_kwargs={"k": 15})
         # Offload synchronous LangChain network I/O to thread pool
         return await loop.run_in_executor(None, retriever.invoke, question)
+
+    def vector_retrieve(self, question: str) -> List[Document]:
+        """Runs the semantic vector over-retrieval loop synchronously."""
+        retriever = self.chroma_client.get_retriever(search_kwargs={"k": 15})
+        return retriever.invoke(question)
 
     def rerank_cache(self, question: str, initial_docs: List[Document]) -> List[Document]:
         """Applies Cross-Encoder scaling weights over fused hits."""

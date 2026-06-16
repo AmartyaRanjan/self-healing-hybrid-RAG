@@ -1,4 +1,4 @@
-﻿import os
+import os
 import sys
 import asyncio
 from typing import Dict, Any
@@ -33,72 +33,99 @@ def harmonize_context_to_markdown(documents: list) -> list:
         title = doc.metadata.get("title", "System Context Frame")
         score = doc.metadata.get("score", 0.0)
         markdown_content = (
-            f"### 📄 Source Reference: {title}\n"
+            f"### [Doc] Source Reference: {title}\n"
             f"* **Retrieval Confidence Score:** {score:.4f}\n"
             f"```markdown\n{doc.page_content.strip()}\n```\n"
         )
         harmonized_docs.append(Document(page_content=markdown_content, metadata=doc.metadata))
     return harmonized_docs
 
+# =====================================================================
+# FIXED WORKING NODE ROUTING
+# =====================================================================
+
 def decompose_query_node(state: RAGState) -> Dict[str, Any]:
     print("\n--- ENTERING NODE: QUERY DECOMPOSITION ---")
     question = state["question"]
     steps = state.get("steps", [])
     steps.append("decompose_query")
-    decomposition_engine.decompose(question)
-    return {"steps": steps}
+    
+    # FIXED: Capture sub-queries and save them directly to state tracking context
+    sub_queries = decomposition_engine.decompose(question)
+    return {"sub_queries": sub_queries, "steps": steps}
 
 def hyde_node(state: RAGState) -> Dict[str, Any]:
     print("\n--- ENTERING NODE: HYDE OPTIMIZATION ---")
     question = state["question"]
     steps = state.get("steps", [])
     steps.append("hyde_generation")
+    
+    # FIXED: Save the hypothetical text explicitly to state dictionary context
     fake_doc_text = hyde_engine.generate_hypothetical_document(question)
-    hyde_document_frame = Document(
-        page_content=fake_doc_text,
-        metadata={"title": "Upstream HyDE Structural Anchor", "score": 1.5}
-    )
-    return {"documents": [hyde_document_frame], "steps": steps}
+    return {"hyde_context": fake_doc_text, "steps": steps}
 
 def transform_query_node(state: RAGState) -> Dict[str, Any]:
     print("\n--- ENTERING NODE: QUERY TRANSFORMATION ---")
     raw_question = state["question"]
     steps = state.get("steps", [])
     steps.append("transform_query")
-    transform_payload = query_transformer.transform(raw_question)
+    
+    transform_payload = query_transformer.transform(raw_query=raw_question)
     clean_question = transform_payload.get("optimized_query", raw_question)
     return {"question": clean_question, "steps": steps}
 
 def retrieve_node(state: RAGState) -> Dict[str, Any]:
     """
-    HIGH TRAFFIC ASYNC RETRIEVAL: Executes multi-engine queries concurrently 
-    to handle enterprise scalability requirements.
+    FIXED HYBRID FUSION: Actively passes sub-queries and HyDE text vectors 
+    downstream to ensure complete multi-database coverage.
     """
     print("\n--- ENTERING NODE: ASYNC RETRIEVAL & RE-RANKING ---")
     question = state["question"]
+    sub_queries = state.get("sub_queries", [question])
+    hyde_text = state.get("hyde_context", question)
     steps = state.get("steps", [])
     steps.append("retrieve")
     
     existing_documents = state.get("documents", []) or []
     
-    # Run the Vector Engine retrieval inside an async loop event to handle scaling concurrent traffic
-    print("[*] Scaling Pipeline: Launching asynchronous retrieval loop...")
-    chroma_context_frames = asyncio.run(retrieval_engine.async_vector_retrieve(question))
+    # FIXED: Run retrieval using the dense semantic HyDE context text block to optimize matching target
+    print("[*] Scaling Pipeline: Launching retrieval over HyDE context anchors...")
+    chroma_context_frames = retrieval_engine.vector_retrieve(hyde_text)
     
-    if len(chroma_context_frames) > 0 and not lexical_highway.bm25:
-        lexical_highway.initialize_index(chroma_context_frames)
+    # FIXED: Run a separate fallback pass for individual sub-queries if they exist
+    additional_frames = []
+    if len(sub_queries) > 1:
+        print(f"[*] Extracting sub-query targets for deeper structural recall context...")
+        for sub_q in sub_queries:
+            sub_hits = retrieval_engine.vector_retrieve(sub_q)
+            additional_frames.extend(sub_hits)
+            
+    all_raw_vector_hits = chroma_context_frames + additional_frames
+    
+    # Ensure our local keyword lexical highway indexes the raw context pool
+    if len(all_raw_vector_hits) > 0 and not lexical_highway.bm25:
+        lexical_highway.initialize_index(all_raw_vector_hits)
         
     lexical_hits = lexical_highway.search(question, top_n=2)
     
-    # Run cross-encoder over retrieved vectors
-    ranked_chroma = retrieval_engine.rerank_cache(question, chroma_context_frames)
+    # Run cross-encoder over the text blocks using the optimized user question frame
+    ranked_chroma = retrieval_engine.rerank_cache(question, all_raw_vector_hits)
     
-    # Fuse all data tracks
+    # Deduplicate and fuse everything
     fused_documents = existing_documents + ranked_chroma + lexical_hits
-    fused_documents.sort(key=lambda x: x.metadata.get("score", -99.0), reverse=True)
-    fused_documents = fused_documents[:4]
     
-    harmonized_documents = harmonize_context_to_markdown(fused_documents)
+    # Prevent index duplication collisions
+    seen_contents = set()
+    deduped_documents = []
+    for doc in fused_documents:
+        if doc.page_content not in seen_contents:
+            seen_contents.add(doc.page_content)
+            deduped_documents.append(doc)
+            
+    deduped_documents.sort(key=lambda x: x.metadata.get("score", -99.0), reverse=True)
+    final_context_payload = deduped_documents[:4]
+    
+    harmonized_documents = harmonize_context_to_markdown(final_context_payload)
     print(f"[+] Re-Ranking & Harmonization finalized. Retained top {len(harmonized_documents)} unified frames.")
     return {"documents": harmonized_documents, "steps": steps}
 
@@ -118,6 +145,7 @@ def fallback_search_node(state: RAGState) -> Dict[str, Any]:
     steps.append("web_search")
     live_web_frames = web_search_engine.search(query=question)
     return {"documents": live_web_frames, "steps": steps}
+
 
 # Build LangGraph Loop Mapping
 workflow = StateGraph(RAGState)

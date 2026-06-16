@@ -13,7 +13,8 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 
 def main():
     # Load sensitive environment runtime keys
-    load_dotenv(dotenv_path="./config/.env")
+    dotenv_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../config/.env")
+    load_dotenv(dotenv_path=os.path.normpath(dotenv_path))
     if not os.getenv("GOOGLE_API_KEY"):
         print("[!] Execution Aborted: GOOGLE_API_KEY is missing from config/.env")
         return

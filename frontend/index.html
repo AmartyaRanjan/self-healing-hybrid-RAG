@@ -1,0 +1,2403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Self-Healing Hybrid RAG — Intelligence Interface</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='14' fill='%2300d4ff' opacity='.9'/><text x='16' y='22' font-size='18' text-anchor='middle' fill='%23050810'>⚡</text></svg>" />
+  <meta name="description" content="An advanced hybrid RAG system powered by LangGraph, Chroma, and Neo4j with real-time pipeline visualization." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    /* ═══════════════════════════════════════════════════════════════
+       CSS DESIGN SYSTEM
+    ═══════════════════════════════════════════════════════════════ */
+    :root {
+      --bg-void:       #050810;
+      --bg-deep:       #080d1a;
+      --bg-surface:    #0d1528;
+      --bg-card:       #111e35;
+      --bg-elevated:   #162140;
+
+      --cyan:          #00d4ff;
+      --cyan-dim:      #00a0c0;
+      --purple:        #a855f7;
+      --purple-dim:    #7c3aed;
+      --green:         #10b981;
+      --green-dim:     #059669;
+      --amber:         #f59e0b;
+      --red:           #ef4444;
+      --pink:          #ec4899;
+
+      --text-primary:  #e2e8f0;
+      --text-secondary:#94a3b8;
+      --text-muted:    #4a5568;
+      --border:        rgba(0, 212, 255, 0.12);
+      --border-bright: rgba(0, 212, 255, 0.35);
+
+      --glow-cyan:     0 0 20px rgba(0, 212, 255, 0.4), 0 0 60px rgba(0, 212, 255, 0.15);
+      --glow-purple:   0 0 20px rgba(168, 85, 247, 0.4), 0 0 60px rgba(168, 85, 247, 0.15);
+      --glow-green:    0 0 20px rgba(16, 185, 129, 0.4);
+      --glow-red:      0 0 20px rgba(239, 68, 68, 0.4);
+
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-xl: 28px;
+
+      --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-void);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: var(--bg-deep); }
+    ::-webkit-scrollbar-thumb { background: var(--cyan-dim); border-radius: 3px; }
+
+    /* ═══════════════════════════════════════════════════════════════
+       PARTICLE CANVAS
+    ═══════════════════════════════════════════════════════════════ */
+    #particle-canvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.5;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       LAYOUT
+    ═══════════════════════════════════════════════════════════════ */
+    .app-wrapper {
+      position: relative;
+      z-index: 1;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 24px 60px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       HEADER
+    ═══════════════════════════════════════════════════════════════ */
+    .header {
+      text-align: center;
+      padding: 60px 20px 48px;
+      position: relative;
+    }
+
+    .header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0, 212, 255, 0.08);
+      border: 1px solid var(--border-bright);
+      border-radius: 100px;
+      padding: 6px 18px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      color: var(--cyan);
+      text-transform: uppercase;
+      margin-bottom: 28px;
+    }
+
+    .header-badge .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: var(--glow-green);
+      animation: pulse-dot 2s infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.7); }
+    }
+
+    .header h1 {
+      font-size: clamp(2.4rem, 5vw, 3.8rem);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, #fff 0%, var(--cyan) 50%, var(--purple) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 16px;
+    }
+
+    .header p {
+      font-size: 1.05rem;
+      color: var(--text-secondary);
+      max-width: 600px;
+      margin: 0 auto 0;
+      line-height: 1.6;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       CARDS / GLASS
+    ═══════════════════════════════════════════════════════════════ */
+    .glass-card {
+      background: rgba(13, 21, 40, 0.85);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+
+    .glass-card:hover {
+      border-color: var(--border-bright);
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      margin-bottom: 6px;
+    }
+
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 20px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       MAIN GRID
+    ═══════════════════════════════════════════════════════════════ */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    @media (max-width: 1024px) {
+      .main-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       LEFT COLUMN
+    ═══════════════════════════════════════════════════════════════ */
+    .left-col { display: flex; flex-direction: column; gap: 20px; }
+
+    /* ── Upload Panel ── */
+    .upload-panel { padding: 28px; }
+
+    .drop-zone {
+      border: 2px dashed rgba(0, 212, 255, 0.25);
+      border-radius: var(--radius-md);
+      padding: 36px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .drop-zone::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, rgba(0, 212, 255, 0.04) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity var(--transition);
+    }
+
+    .drop-zone:hover::before, .drop-zone.drag-over::before { opacity: 1; }
+    .drop-zone:hover, .drop-zone.drag-over {
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 1px rgba(0, 212, 255, 0.2), inset 0 0 30px rgba(0, 212, 255, 0.04);
+    }
+
+    .drop-icon {
+      width: 52px; height: 52px;
+      border-radius: 14px;
+      background: rgba(0, 212, 255, 0.1);
+      border: 1px solid rgba(0, 212, 255, 0.2);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px;
+      font-size: 22px;
+      transition: transform var(--transition);
+    }
+
+    .drop-zone:hover .drop-icon { transform: translateY(-3px); }
+
+    .drop-zone h3 { font-size: 1rem; font-weight: 600; margin-bottom: 6px; }
+    .drop-zone p { font-size: 0.82rem; color: var(--text-secondary); }
+
+    #file-input { display: none; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 11px 24px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all var(--transition);
+      font-family: inherit;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--cyan-dim) 0%, var(--purple-dim) 100%);
+      color: white;
+      box-shadow: 0 4px 20px rgba(0, 160, 192, 0.3);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 28px rgba(0, 212, 255, 0.4);
+    }
+
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-ghost {
+      background: rgba(255,255,255,0.05);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { background: rgba(255,255,255,0.1); color: var(--text-primary); }
+
+    .upload-actions {
+      display: flex; gap: 10px; margin-top: 20px;
+    }
+
+    .upload-actions .btn { flex: 1; }
+
+    /* ── Ingestion Progress ── */
+    .ingestion-progress { margin-top: 22px; }
+
+    .progress-stages {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .stage-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      transition: all var(--transition);
+    }
+
+    .stage-item.active {
+      border-color: rgba(0, 212, 255, 0.3);
+      background: rgba(0, 212, 255, 0.05);
+    }
+
+    .stage-item.done {
+      border-color: rgba(16, 185, 129, 0.3);
+      background: rgba(16, 185, 129, 0.05);
+    }
+
+    .stage-item.error {
+      border-color: rgba(239, 68, 68, 0.3);
+      background: rgba(239, 68, 68, 0.05);
+    }
+
+    .stage-icon {
+      width: 30px; height: 30px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+      transition: all var(--transition);
+    }
+
+    .stage-item.idle    .stage-icon { background: rgba(255,255,255,0.05); }
+    .stage-item.active  .stage-icon { background: rgba(0, 212, 255, 0.15); animation: spin-glow 1.5s linear infinite; }
+    .stage-item.done    .stage-icon { background: rgba(16, 185, 129, 0.15); }
+    .stage-item.error   .stage-icon { background: rgba(239, 68, 68, 0.15); }
+
+    @keyframes spin-glow {
+      0%   { box-shadow: 0 0 0 rgba(0,212,255,0.5); }
+      50%  { box-shadow: 0 0 16px rgba(0,212,255,0.6); }
+      100% { box-shadow: 0 0 0 rgba(0,212,255,0.5); }
+    }
+
+    .stage-info { flex: 1; }
+    .stage-name { font-size: 0.85rem; font-weight: 600; }
+    .stage-desc { font-size: 0.75rem; color: var(--text-secondary); margin-top: 1px; }
+
+    .stage-badge {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
+      padding: 3px 8px; border-radius: 100px;
+      text-transform: uppercase;
+    }
+
+    .stage-item.idle  .stage-badge { background: rgba(255,255,255,0.06); color: var(--text-muted); }
+    .stage-item.active .stage-badge { background: rgba(0,212,255,0.15); color: var(--cyan); }
+    .stage-item.done  .stage-badge { background: rgba(16,185,129,0.15); color: var(--green); }
+    .stage-item.error .stage-badge { background: rgba(239,68,68,0.15); color: var(--red); }
+
+    .progress-bar-wrap {
+      height: 4px; border-radius: 2px;
+      background: rgba(255,255,255,0.06);
+      margin-top: 16px; overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--cyan), var(--purple));
+      border-radius: 2px;
+      transition: width 0.6s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+      animation: shimmer 1.5s infinite;
+    }
+
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(200%); }
+    }
+
+    /* ── Jobs History Panel ── */
+    .jobs-panel { padding: 24px; }
+
+    .job-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .job-item:last-child { border-bottom: none; }
+
+    .job-dot {
+      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    }
+    .job-dot.pending   { background: var(--amber); }
+    .job-dot.running, .job-dot.chunking, .job-dot.graph_mining,
+    .job-dot.chroma_done, .job-dot.graph_done { background: var(--cyan); animation: pulse-dot 1.5s infinite; }
+    .job-dot.done      { background: var(--green); }
+    .job-dot.error     { background: var(--red); }
+
+    .job-info { flex: 1; min-width: 0; }
+    .job-name { font-size: 0.8rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .job-status { font-size: 0.72rem; color: var(--text-secondary); }
+
+    /* ── Library Panel ── */
+    .library-panel { padding: 24px; margin-top: 20px; }
+    .library-list { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; max-height: 250px; overflow-y: auto; }
+    .library-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; border-radius: var(--radius-sm);
+      background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+      font-size: 0.82rem; transition: border-color var(--transition);
+    }
+    .library-item:hover { border-color: rgba(0, 212, 255, 0.25); }
+    .library-icon { font-size: 14px; }
+    .library-name { flex: 1; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* ═══════════════════════════════════════════════════════════════
+       RIGHT COLUMN
+    ═══════════════════════════════════════════════════════════════ */
+    .right-col { display: flex; flex-direction: column; gap: 24px; }
+
+    /* ── Pipeline Visualizer ── */
+    .pipeline-panel { padding: 28px; }
+
+    #pipeline-canvas {
+      width: 100%;
+      height: 240px;
+      display: block;
+      border-radius: var(--radius-md);
+      background: rgba(5, 8, 16, 0.6);
+      border: 1px solid var(--border);
+    }
+
+    .pipeline-legend {
+      display: flex; flex-wrap: wrap; gap: 10px;
+      margin-top: 16px;
+    }
+
+    .legend-item {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 0.75rem; color: var(--text-secondary);
+    }
+
+    .legend-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+    }
+
+    /* ── Chat Interface ── */
+    .chat-panel { padding: 28px; flex: 1; }
+
+    .chat-window {
+      height: 440px;
+      overflow-y: auto;
+      padding: 4px 0;
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 40px;
+      color: var(--text-muted);
+    }
+
+    .empty-icon {
+      font-size: 3rem;
+      opacity: 0.3;
+    }
+
+    .empty-state p { font-size: 0.9rem; text-align: center; line-height: 1.6; }
+
+    /* Message bubbles */
+    .message {
+      display: flex;
+      gap: 12px;
+      animation: msg-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+
+    @keyframes msg-in {
+      from { opacity: 0; transform: translateY(12px) scale(0.97); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    .message.user { flex-direction: row-reverse; }
+
+    .avatar {
+      width: 34px; height: 34px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px;
+      flex-shrink: 0;
+      border: 1px solid var(--border);
+    }
+
+    .avatar.user-avatar { background: linear-gradient(135deg, var(--purple-dim), var(--pink)); }
+    .avatar.bot-avatar  { background: linear-gradient(135deg, var(--cyan-dim), var(--purple-dim)); }
+
+    .bubble {
+      max-width: 78%;
+      padding: 14px 18px;
+      border-radius: 16px;
+      font-size: 0.9rem;
+      line-height: 1.65;
+    }
+
+    .message.user .bubble {
+      background: linear-gradient(135deg, rgba(124, 58, 237, 0.25), rgba(236, 72, 153, 0.15));
+      border: 1px solid rgba(124, 58, 237, 0.3);
+      border-top-right-radius: 4px;
+      color: var(--text-primary);
+    }
+
+    .message.bot .bubble {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-top-left-radius: 4px;
+      color: var(--text-primary);
+    }
+
+    /* Steps accordion in bot bubble */
+    .steps-toggle {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 0.75rem; color: var(--cyan);
+      cursor: pointer; margin-top: 12px;
+      background: rgba(0, 212, 255, 0.08);
+      padding: 4px 10px; border-radius: 100px;
+      border: 1px solid rgba(0, 212, 255, 0.2);
+      user-select: none;
+      transition: all var(--transition);
+    }
+    .steps-toggle:hover { background: rgba(0, 212, 255, 0.15); }
+
+    .steps-content {
+      margin-top: 12px;
+      padding: 12px;
+      background: rgba(0,0,0,0.25);
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      display: none;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      line-height: 1.6;
+      color: var(--text-secondary);
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .steps-content.open { display: block; }
+
+    /* Typing indicator */
+    .typing-bubble {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-top-left-radius: 4px;
+      padding: 14px 18px;
+      border-radius: 16px;
+      display: flex; gap: 4px; align-items: center;
+    }
+
+    .typing-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--cyan-dim);
+      animation: typing 1.2s infinite;
+    }
+
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typing {
+      0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+      40% { transform: translateY(-8px); opacity: 1; }
+    }
+
+    /* Live node indicator below typing */
+    .live-node-indicator {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 12px;
+      background: rgba(0, 212, 255, 0.06);
+      border: 1px solid rgba(0, 212, 255, 0.15);
+      border-radius: 8px;
+      margin-top: 10px;
+      font-size: 0.78rem;
+      color: var(--cyan);
+      animation: fade-in 0.3s ease both;
+    }
+
+    @keyframes fade-in {
+      from { opacity: 0; transform: translateY(4px); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    .live-pulse {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: var(--glow-cyan);
+      animation: pulse-dot 1s infinite;
+      flex-shrink: 0;
+    }
+
+    /* Chat Input */
+    .chat-input-row {
+      display: flex; gap: 10px; align-items: flex-end;
+    }
+
+    .input-group { flex: 1; position: relative; }
+
+    .chat-input {
+      width: 100%;
+      padding: 14px 20px;
+      padding-right: 52px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      font-family: inherit;
+      resize: none;
+      outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition);
+      min-height: 52px;
+      max-height: 140px;
+      line-height: 1.5;
+    }
+
+    .chat-input:focus {
+      border-color: var(--cyan-dim);
+      box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+    }
+
+    .chat-input::placeholder { color: var(--text-muted); }
+
+    .keyword-input {
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text-primary);
+      font-size: 0.82rem;
+      font-family: inherit;
+      outline: none;
+      width: 150px;
+      transition: border-color var(--transition);
+    }
+
+    .keyword-input:focus { border-color: var(--purple-dim); }
+    .keyword-input::placeholder { color: var(--text-muted); }
+
+    .send-btn {
+      width: 52px; height: 52px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--cyan-dim), var(--purple-dim));
+      border: none;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all var(--transition);
+      box-shadow: 0 4px 16px rgba(0, 160, 192, 0.3);
+      flex-shrink: 0;
+    }
+
+    .send-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(0, 212, 255, 0.4);
+    }
+
+    .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .input-hint {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       PIPELINE NODE HIGHLIGHT OVERLAY  
+    ═══════════════════════════════════════════════════════════════ */
+    .pipeline-node-status {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      margin-top: 16px;
+    }
+
+    .p-node {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+      color: var(--text-muted);
+      transition: all 0.4s ease;
+    }
+
+    .p-node .p-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--text-muted);
+      transition: all 0.3s ease;
+    }
+
+    .p-node.active {
+      border-color: rgba(0,212,255,0.4);
+      background: rgba(0,212,255,0.08);
+      color: var(--cyan);
+      box-shadow: 0 0 16px rgba(0,212,255,0.15);
+    }
+
+    .p-node.active .p-dot {
+      background: var(--cyan);
+      box-shadow: 0 0 8px var(--cyan);
+      animation: pulse-dot 0.8s infinite;
+    }
+
+    .p-node.done {
+      border-color: rgba(16,185,129,0.3);
+      background: rgba(16,185,129,0.06);
+      color: var(--green);
+    }
+
+    .p-node.done .p-dot {
+      background: var(--green);
+    }
+
+    /* Toast notifications */
+    .toast-container {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 9999;
+    }
+
+    .toast {
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      backdrop-filter: blur(20px);
+      animation: toast-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+      max-width: 320px;
+    }
+
+    .toast-success { background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.3); color: var(--green); }
+    .toast-error   { background: rgba(239,68,68,0.15);  border-color: rgba(239,68,68,0.3);  color: var(--red); }
+    .toast-info    { background: rgba(0,212,255,0.12);  border-color: rgba(0,212,255,0.25); color: var(--cyan); }
+
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateX(20px); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       NEO4J GRAPH EXPLORER
+    ═══════════════════════════════════════════════════════════════ */
+    .graph-section {
+      margin-top: 28px;
+    }
+
+    .graph-panel {
+      padding: 28px;
+    }
+
+    .graph-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .graph-search {
+      flex: 1;
+      min-width: 200px;
+      padding: 10px 16px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text-primary);
+      font-size: 0.85rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color var(--transition);
+    }
+    .graph-search:focus { border-color: var(--purple-dim); }
+    .graph-search::placeholder { color: var(--text-muted); }
+
+    .graph-stats {
+      display: flex;
+      gap: 16px;
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+    }
+
+    .graph-stat { display: flex; align-items: center; gap: 6px; }
+    .graph-stat-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+    #graph-canvas-wrap {
+      position: relative;
+      width: 100%;
+      height: 520px;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      background: rgba(4, 6, 14, 0.9);
+      border: 1px solid var(--border);
+      cursor: grab;
+    }
+    #graph-canvas-wrap:active { cursor: grabbing; }
+
+    #neo4j-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .graph-overlay-msg {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      pointer-events: none;
+    }
+
+    .graph-overlay-msg .graph-spinner {
+      width: 40px; height: 40px;
+      border: 3px solid rgba(168, 85, 247, 0.2);
+      border-top-color: var(--purple);
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #graph-tooltip {
+      position: absolute;
+      pointer-events: none;
+      background: rgba(10, 14, 28, 0.96);
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 0.78rem;
+      color: var(--text-primary);
+      max-width: 240px;
+      line-height: 1.5;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+      display: none;
+      z-index: 10;
+    }
+    #graph-tooltip .tt-name { font-weight: 700; color: var(--purple); margin-bottom: 4px; }
+    #graph-tooltip .tt-label { font-size: 0.7rem; color: var(--cyan-dim); text-transform: uppercase; letter-spacing: 0.08em; }
+    #graph-tooltip .tt-desc { color: var(--text-secondary); margin-top: 4px; }
+
+    .graph-legend {
+      display: flex; flex-wrap: wrap; gap: 10px;
+      margin-top: 14px;
+    }
+
+    .graph-zoom-controls {
+      position: absolute;
+      bottom: 14px; right: 14px;
+      display: flex; flex-direction: column; gap: 6px;
+      z-index: 5;
+    }
+
+    .zoom-btn {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      background: rgba(13, 21, 40, 0.9);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      font-size: 16px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+    .zoom-btn:hover { background: rgba(168, 85, 247, 0.2); border-color: var(--purple-dim); color: white; }
+
+    /* ═══════════════════════════════════════════════════════════════
+       FOOTER
+    ═══════════════════════════════════════════════════════════════ */
+    .footer {
+      margin-top: 60px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.78rem;
+    }
+
+    .footer span { color: var(--cyan-dim); }
+  </style>
+</head>
+<body>
+
+  <canvas id="particle-canvas"></canvas>
+
+  <div class="app-wrapper">
+
+    <!-- ─── HEADER ─────────────────────────────────────────────── -->
+    <header class="header">
+      <div class="header-badge">
+        <span class="dot"></span>
+        Self-Healing Hybrid RAG System
+      </div>
+      <h1>Intelligence Interface</h1>
+      <p>
+        Upload your documents to build a living knowledge graph &amp; vector index.
+        Then ask anything — watch the AI self-heal its way to the perfect answer.
+      </p>
+    </header>
+
+    <!-- ─── MAIN GRID ──────────────────────────────────────────── -->
+    <div class="main-grid">
+
+      <!-- ════════════ LEFT COLUMN ════════════ -->
+      <aside class="left-col">
+
+        <!-- Upload Panel -->
+        <div class="glass-card upload-panel">
+          <div class="section-label">Document Ingestion</div>
+          <div class="section-title">Add PDF Source</div>
+
+          <div class="drop-zone" id="drop-zone">
+            <div class="drop-icon">📄</div>
+            <h3>Drop your PDF here</h3>
+            <p>or click to browse files</p>
+          </div>
+          <input type="file" id="file-input" accept=".pdf" />
+
+          <div id="selected-file" style="display:none; margin-top:14px; font-size:0.82rem; color:var(--cyan); display:flex; align-items:center; gap:8px;">
+            <span>📎</span>
+            <span id="selected-filename"></span>
+          </div>
+
+          <div class="upload-actions">
+            <button class="btn btn-primary" id="upload-btn" disabled>
+              <span>⚡</span> Ingest PDF
+            </button>
+            <button class="btn btn-ghost" id="clear-btn" disabled>Clear</button>
+          </div>
+
+          <!-- Ingestion Progress -->
+          <div class="ingestion-progress" id="ingestion-progress" style="display:none;">
+            <div style="font-size:0.82rem; font-weight:600; color:var(--text-secondary); margin-bottom:12px;">
+              Pipeline Stages
+            </div>
+            <div class="progress-stages">
+              <div class="stage-item idle" id="stage-upload">
+                <div class="stage-icon">☁️</div>
+                <div class="stage-info">
+                  <div class="stage-name">File Upload</div>
+                  <div class="stage-desc">Transferring PDF to server</div>
+                </div>
+                <div class="stage-badge">Waiting</div>
+              </div>
+              <div class="stage-item idle" id="stage-chunking">
+                <div class="stage-icon">✂️</div>
+                <div class="stage-info">
+                  <div class="stage-name">Structural Chunking</div>
+                  <div class="stage-desc">Docling + Vision LLM parsing</div>
+                </div>
+                <div class="stage-badge">Waiting</div>
+              </div>
+              <div class="stage-item idle" id="stage-chroma">
+                <div class="stage-icon">🔮</div>
+                <div class="stage-info">
+                  <div class="stage-name">Chroma Vector Index</div>
+                  <div class="stage-desc">Gemini embeddings + storage</div>
+                </div>
+                <div class="stage-badge">Waiting</div>
+              </div>
+              <div class="stage-item idle" id="stage-graph">
+                <div class="stage-icon">🕸️</div>
+                <div class="stage-info">
+                  <div class="stage-name">Neo4j Graph Mining</div>
+                  <div class="stage-desc">Entity &amp; relationship extraction</div>
+                </div>
+                <div class="stage-badge">Waiting</div>
+              </div>
+            </div>
+            <div class="progress-bar-wrap">
+              <div class="progress-bar-fill" id="progress-bar" style="width:0%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Jobs History -->
+        <div class="glass-card jobs-panel" id="jobs-panel" style="display:none;">
+          <div class="section-label">Ingestion History</div>
+          <div class="section-title">Recent Jobs</div>
+          <div id="jobs-list"></div>
+        </div>
+
+        <!-- Indexed Documents -->
+        <div class="glass-card library-panel" id="library-panel">
+          <div class="section-label">Knowledge Base</div>
+          <div class="section-title">Indexed Documents</div>
+          <div id="library-list" class="library-list">
+            <div style="font-size:0.8rem; color:var(--text-secondary);">Connecting to database...</div>
+          </div>
+        </div>
+
+      </aside>
+
+      <!-- ════════════ RIGHT COLUMN ════════════ -->
+      <main class="right-col">
+
+        <!-- Pipeline Visualizer -->
+        <div class="glass-card pipeline-panel">
+          <div class="section-label">Live Pipeline</div>
+          <div class="section-title">RAG Workflow Visualization</div>
+
+          <canvas id="pipeline-canvas"></canvas>
+
+          <!-- Node status pills -->
+          <div class="pipeline-node-status" id="node-pills">
+            <div class="p-node" id="pill-decompose_query"><span class="p-dot"></span> Decompose</div>
+            <div class="p-node" id="pill-hyde_optimization"><span class="p-dot"></span> HyDE</div>
+            <div class="p-node" id="pill-transform_query"><span class="p-dot"></span> Transform</div>
+            <div class="p-node" id="pill-retrieve_docs"><span class="p-dot"></span> Retrieve</div>
+            <div class="p-node" id="pill-generate_response"><span class="p-dot"></span> Generate</div>
+            <div class="p-node" id="pill-grade"><span class="p-dot"></span> Grade</div>
+            <div class="p-node" id="pill-fallback_web_search"><span class="p-dot"></span> Web Search</div>
+          </div>
+        </div>
+
+        <!-- Chat Interface -->
+        <div class="glass-card chat-panel">
+          <div class="section-label">Ask the Agent</div>
+          <div class="section-title">Conversational Interface</div>
+
+          <div class="chat-window" id="chat-window">
+            <div class="empty-state" id="empty-state">
+              <div class="empty-icon">🧠</div>
+              <p>Your Self-Healing RAG agent is ready.<br />Upload a document then ask your first question.</p>
+            </div>
+          </div>
+
+          <div class="chat-input-row">
+            <div class="input-group">
+              <textarea
+                class="chat-input"
+                id="chat-input"
+                placeholder="Ask anything about your documents..."
+                rows="1"
+              ></textarea>
+            </div>
+            <input
+              class="keyword-input"
+              id="keyword-input"
+              type="text"
+              placeholder="Graph keyword"
+              title="Optional Neo4j keyword for graph context injection"
+            />
+            <button class="send-btn" id="send-btn" disabled title="Send">
+              ➤
+            </button>
+          </div>
+          <div class="input-hint">
+            ↩ Press Enter to send &nbsp;·&nbsp; Shift+Enter for new line &nbsp;·&nbsp;
+            Graph keyword injects Neo4j topology into context
+          </div>
+        </div>
+
+      </main>
+    </div>
+
+    <!-- ─── NEO4J GRAPH EXPLORER ──────────────────────────────── -->
+    <section class="graph-section">
+      <div class="glass-card graph-panel">
+        <div class="section-label">Knowledge Graph</div>
+        <div class="section-title">Neo4j Entity &amp; Relationship Explorer</div>
+
+        <div class="graph-toolbar">
+          <input
+            id="graph-search-input"
+            class="graph-search"
+            type="text"
+            placeholder="Search nodes by name (e.g. Rutherford, Bohr, relation)…"
+          />
+          <button class="btn btn-ghost" id="graph-search-btn">Search</button>
+          <button class="btn btn-ghost" id="graph-reset-btn">Show All</button>
+          <div class="graph-stats" id="graph-stats" style="display:none;">
+            <div class="graph-stat">
+              <div class="graph-stat-dot" style="background:var(--purple);"></div>
+              <span id="stat-nodes">0 nodes</span>
+            </div>
+            <div class="graph-stat">
+              <div class="graph-stat-dot" style="background:var(--cyan);"></div>
+              <span id="stat-edges">0 edges</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="graph-canvas-wrap">
+          <canvas id="neo4j-canvas"></canvas>
+
+          <!-- Zoom controls -->
+          <div class="graph-zoom-controls">
+            <button class="zoom-btn" id="zoom-in-btn" title="Zoom in">+</button>
+            <button class="zoom-btn" id="zoom-fit-btn" title="Fit to view">⊙</button>
+            <button class="zoom-btn" id="zoom-out-btn" title="Zoom out">−</button>
+          </div>
+
+          <!-- Overlay when loading or empty -->
+          <div class="graph-overlay-msg" id="graph-overlay">
+            <div class="graph-spinner" id="graph-spinner" style="display:none;"></div>
+            <span id="graph-overlay-text">Click "Show All" or search to explore the knowledge graph</span>
+          </div>
+
+          <!-- Tooltip -->
+          <div id="graph-tooltip">
+            <div class="tt-label" id="tt-label"></div>
+            <div class="tt-name" id="tt-name"></div>
+            <div class="tt-desc" id="tt-desc"></div>
+          </div>
+        </div>
+
+        <!-- Dynamic legend -->
+        <div class="graph-legend" id="graph-legend"></div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      Built with <span>FastAPI · LangGraph · Chroma · Neo4j · Gemini</span>
+      &nbsp;—&nbsp; Self-Healing Hybrid RAG
+    </footer>
+  </div>
+
+  <!-- Toast container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script>
+    // ─────────────────────────────────────────────────────────────
+    //  CONFIG
+    // ─────────────────────────────────────────────────────────────
+    const API_BASE = window.location.origin && window.location.origin !== 'null' && !window.location.origin.startsWith('file:')
+      ? window.location.origin
+      : 'http://localhost:8080';
+
+    // ─────────────────────────────────────────────────────────────
+    //  PARTICLE BACKGROUND
+    // ─────────────────────────────────────────────────────────────
+    (function initParticles() {
+      const canvas = document.getElementById('particle-canvas');
+      const ctx = canvas.getContext('2d');
+      let W, H, particles = [];
+
+      function resize() {
+        W = canvas.width  = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+      }
+
+      function createParticles(n) {
+        particles = [];
+        for (let i = 0; i < n; i++) {
+          particles.push({
+            x: Math.random() * W,
+            y: Math.random() * H,
+            r: Math.random() * 1.2 + 0.3,
+            dx: (Math.random() - 0.5) * 0.3,
+            dy: (Math.random() - 0.5) * 0.3,
+            alpha: Math.random() * 0.5 + 0.1,
+            color: Math.random() > 0.5 ? '#00d4ff' : '#a855f7',
+          });
+        }
+      }
+
+      function drawParticles() {
+        ctx.clearRect(0, 0, W, H);
+        particles.forEach(p => {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fillStyle = p.color;
+          ctx.globalAlpha = p.alpha;
+          ctx.fill();
+
+          p.x += p.dx;
+          p.y += p.dy;
+          if (p.x < 0 || p.x > W) p.dx *= -1;
+          if (p.y < 0 || p.y > H) p.dy *= -1;
+        });
+        ctx.globalAlpha = 1;
+
+        // Draw connecting lines for nearby particles
+        for (let i = 0; i < particles.length; i++) {
+          for (let j = i + 1; j < particles.length; j++) {
+            const dx = particles[i].x - particles[j].x;
+            const dy = particles[i].y - particles[j].y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 120) {
+              ctx.beginPath();
+              ctx.moveTo(particles[i].x, particles[i].y);
+              ctx.lineTo(particles[j].x, particles[j].y);
+              ctx.strokeStyle = '#00d4ff';
+              ctx.globalAlpha = (1 - dist / 120) * 0.06;
+              ctx.lineWidth = 0.5;
+              ctx.stroke();
+              ctx.globalAlpha = 1;
+            }
+          }
+        }
+
+        requestAnimationFrame(drawParticles);
+      }
+
+      window.addEventListener('resize', () => { resize(); createParticles(80); });
+      resize();
+      createParticles(80);
+      drawParticles();
+    })();
+
+    // ─────────────────────────────────────────────────────────────
+    //  PIPELINE CANVAS VISUALIZER
+    // ─────────────────────────────────────────────────────────────
+    const pipelineCanvas = document.getElementById('pipeline-canvas');
+    const pCtx = pipelineCanvas.getContext('2d');
+
+    const NODES = [
+      { id: 'decompose_query',    label: 'Decompose',  shortLabel: 'Dec', x: 0.08, y: 0.5, color: '#00d4ff' },
+      { id: 'hyde_optimization',  label: 'HyDE',       shortLabel: 'HyDE', x: 0.22, y: 0.5, color: '#a855f7' },
+      { id: 'transform_query',    label: 'Transform',  shortLabel: 'Xfm', x: 0.37, y: 0.5, color: '#00d4ff' },
+      { id: 'retrieve_docs',      label: 'Retrieve',   shortLabel: 'Ret', x: 0.52, y: 0.5, color: '#f59e0b' },
+      { id: 'generate_response',  label: 'Generate',   shortLabel: 'Gen', x: 0.70, y: 0.35, color: '#10b981' },
+      { id: 'fallback_web_search',label: 'Web Search', shortLabel: 'Web', x: 0.70, y: 0.72, color: '#ec4899' },
+      { id: 'grade',              label: 'Grade',      shortLabel: 'Grd', x: 0.88, y: 0.35, color: '#a855f7' },
+    ];
+
+    const EDGES = [
+      ['decompose_query', 'hyde_optimization'],
+      ['hyde_optimization', 'transform_query'],
+      ['transform_query', 'retrieve_docs'],
+      ['retrieve_docs', 'generate_response'],
+      ['retrieve_docs', 'fallback_web_search'],
+      ['fallback_web_search', 'generate_response'],
+      ['generate_response', 'grade'],
+      // loop back
+      ['grade', 'retrieve_docs'],
+    ];
+
+    const nodeState = {}; // id -> 'idle' | 'active' | 'done'
+    NODES.forEach(n => nodeState[n.id] = 'idle');
+
+    let animFrame = null;
+    let flowParticles = []; // animated particles on edges
+
+    function getPx(node) {
+      const r = pipelineCanvas.getBoundingClientRect();
+      return { x: node.x * r.width, y: node.y * r.height };
+    }
+
+    function drawPipeline(ts) {
+      const W = pipelineCanvas.width;
+      const H = pipelineCanvas.height;
+      pCtx.clearRect(0, 0, W, H);
+
+      // Background grid
+      pCtx.strokeStyle = 'rgba(0,212,255,0.04)';
+      pCtx.lineWidth = 1;
+      for (let x = 0; x < W; x += 40) {
+        pCtx.beginPath(); pCtx.moveTo(x, 0); pCtx.lineTo(x, H); pCtx.stroke();
+      }
+      for (let y = 0; y < H; y += 40) {
+        pCtx.beginPath(); pCtx.moveTo(0, y); pCtx.lineTo(W, y); pCtx.stroke();
+      }
+
+      // Draw edges
+      EDGES.forEach(([fromId, toId]) => {
+        const fromN = NODES.find(n => n.id === fromId);
+        const toN   = NODES.find(n => n.id === toId);
+        const f = { x: fromN.x * W, y: fromN.y * H };
+        const t = { x: toN.x * W,   y: toN.y * H };
+
+        const isLoopBack = (fromId === 'grade' && toId === 'retrieve_docs');
+
+        pCtx.beginPath();
+        if (isLoopBack) {
+          // Curved arc for loop-back
+          pCtx.moveTo(f.x, f.y);
+          pCtx.bezierCurveTo(f.x, f.y + 90, t.x, t.y + 90, t.x, t.y);
+        } else {
+          pCtx.moveTo(f.x, f.y);
+          pCtx.lineTo(t.x, t.y);
+        }
+        pCtx.strokeStyle = 'rgba(100,120,160,0.3)';
+        pCtx.lineWidth = 1.5;
+        pCtx.setLineDash([5, 5]);
+        pCtx.stroke();
+        pCtx.setLineDash([]);
+      });
+
+      // Update & draw flow particles
+      flowParticles = flowParticles.filter(fp => fp.t <= 1);
+      flowParticles.forEach(fp => {
+        fp.t += 0.008;
+        const fromN = NODES.find(n => n.id === fp.from);
+        const toN   = NODES.find(n => n.id === fp.to);
+        if (!fromN || !toN) return;
+        const f = { x: fromN.x * W, y: fromN.y * H };
+        const t = { x: toN.x * W,   y: toN.y * H };
+
+        const isLoopBack = (fp.from === 'grade' && fp.to === 'retrieve_docs');
+        let px, py;
+        if (isLoopBack) {
+          const cp1x = f.x, cp1y = f.y + 90, cp2x = t.x, cp2y = t.y + 90;
+          const tt = fp.t;
+          px = Math.pow(1-tt,3)*f.x + 3*Math.pow(1-tt,2)*tt*cp1x + 3*(1-tt)*tt*tt*cp2x + Math.pow(tt,3)*t.x;
+          py = Math.pow(1-tt,3)*f.y + 3*Math.pow(1-tt,2)*tt*cp1y + 3*(1-tt)*tt*tt*cp2y + Math.pow(tt,3)*t.y;
+        } else {
+          px = f.x + (t.x - f.x) * fp.t;
+          py = f.y + (t.y - f.y) * fp.t;
+        }
+
+        pCtx.beginPath();
+        pCtx.arc(px, py, 3.5, 0, Math.PI * 2);
+        pCtx.fillStyle = fp.color;
+        pCtx.shadowBlur = 10;
+        pCtx.shadowColor = fp.color;
+        pCtx.fill();
+        pCtx.shadowBlur = 0;
+      });
+
+      // Draw nodes
+      NODES.forEach(node => {
+        const nx = node.x * W;
+        const ny = node.y * H;
+        const state = nodeState[node.id];
+        const r = 28;
+
+        // Glow
+        if (state === 'active') {
+          const grad = pCtx.createRadialGradient(nx, ny, r, nx, ny, r * 3);
+          grad.addColorStop(0, node.color + '40');
+          grad.addColorStop(1, 'transparent');
+          pCtx.beginPath();
+          pCtx.arc(nx, ny, r * 3, 0, Math.PI * 2);
+          pCtx.fillStyle = grad;
+          pCtx.fill();
+        }
+
+        // Node circle
+        pCtx.beginPath();
+        pCtx.arc(nx, ny, r, 0, Math.PI * 2);
+        if (state === 'active') {
+          pCtx.fillStyle = node.color + '25';
+          pCtx.strokeStyle = node.color;
+          pCtx.lineWidth = 2.5;
+        } else if (state === 'done') {
+          pCtx.fillStyle = '#10b98120';
+          pCtx.strokeStyle = '#10b981';
+          pCtx.lineWidth = 2;
+        } else {
+          pCtx.fillStyle = 'rgba(20,30,60,0.8)';
+          pCtx.strokeStyle = 'rgba(100,120,160,0.4)';
+          pCtx.lineWidth = 1.5;
+        }
+        pCtx.fill();
+        pCtx.stroke();
+
+        // Label
+        pCtx.fillStyle = state === 'idle' ? '#4a5568' : state === 'active' ? node.color : '#10b981';
+        pCtx.font = `bold 9px Inter`;
+        pCtx.textAlign = 'center';
+        pCtx.textBaseline = 'middle';
+        pCtx.fillText(node.shortLabel, nx, ny);
+
+        // Below-node label
+        pCtx.fillStyle = state === 'idle' ? '#4a556820' : state === 'active' ? node.color + 'cc' : '#10b981cc';
+        pCtx.font = `500 8px Inter`;
+        pCtx.fillText(node.label, nx, ny + r + 12);
+      });
+
+      animFrame = requestAnimationFrame(drawPipeline);
+    }
+
+    function resizePipelineCanvas() {
+      const parent = pipelineCanvas.parentElement;
+      pipelineCanvas.width  = parent.clientWidth - 56; // padding compensation
+      pipelineCanvas.height = 240;
+    }
+
+    window.addEventListener('resize', resizePipelineCanvas);
+    resizePipelineCanvas();
+    drawPipeline(0);
+
+    function activateNode(nodeId) {
+      nodeState[nodeId] = 'active';
+      // Spawn flow particles from previous node
+      const nodeIdx = NODES.findIndex(n => n.id === nodeId);
+      if (nodeIdx > 0) {
+        const fromNode = NODES[nodeIdx - 1];
+        // Find the edge
+        const edge = EDGES.find(([f, t]) => t === nodeId);
+        if (edge) {
+          for (let i = 0; i < 4; i++) {
+            setTimeout(() => {
+              const fromN = NODES.find(n => n.id === edge[0]);
+              if (fromN) {
+                flowParticles.push({
+                  from: edge[0], to: nodeId,
+                  t: 0, color: fromN.color
+                });
+              }
+            }, i * 120);
+          }
+        }
+      }
+    }
+
+    function completeNode(nodeId) {
+      nodeState[nodeId] = 'done';
+      document.getElementById(`pill-${nodeId}`)?.classList.replace('active', 'done');
+    }
+
+    function resetPipeline() {
+      NODES.forEach(n => { nodeState[n.id] = 'idle'; });
+      document.querySelectorAll('.p-node').forEach(el => {
+        el.classList.remove('active', 'done');
+      });
+      flowParticles = [];
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    //  TOAST
+    // ─────────────────────────────────────────────────────────────
+    function showToast(msg, type = 'info') {
+      const t = document.createElement('div');
+      t.className = `toast toast-${type}`;
+      t.textContent = msg;
+      document.getElementById('toast-container').appendChild(t);
+      setTimeout(() => t.remove(), 4000);
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    //  FILE UPLOAD
+    // ─────────────────────────────────────────────────────────────
+    let selectedFile = null;
+    let currentJobId = null;
+    let pollTimer = null;
+
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    const uploadBtn = document.getElementById('upload-btn');
+    const clearBtn  = document.getElementById('clear-btn');
+
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    dropZone.addEventListener('dragover', e => {
+      e.preventDefault();
+      dropZone.classList.add('drag-over');
+    });
+
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.classList.remove('drag-over');
+      const f = e.dataTransfer.files[0];
+      if (f && f.name.endsWith('.pdf')) setSelectedFile(f);
+      else showToast('Only PDF files are supported', 'error');
+    });
+
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files[0]) setSelectedFile(fileInput.files[0]);
+    });
+
+    function setSelectedFile(f) {
+      selectedFile = f;
+      document.getElementById('selected-filename').textContent = f.name;
+      document.getElementById('selected-file').style.display = 'flex';
+      uploadBtn.disabled = false;
+      clearBtn.disabled  = false;
+    }
+
+    clearBtn.addEventListener('click', () => {
+      selectedFile = null;
+      fileInput.value = '';
+      document.getElementById('selected-file').style.display = 'none';
+      uploadBtn.disabled = true;
+      clearBtn.disabled  = true;
+      document.getElementById('ingestion-progress').style.display = 'none';
+    });
+
+    uploadBtn.addEventListener('click', async () => {
+      if (!selectedFile) return;
+      await startIngestion(selectedFile);
+    });
+
+    async function startIngestion(file) {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      uploadBtn.disabled = true;
+      clearBtn.disabled  = true;
+      document.getElementById('ingestion-progress').style.display = 'block';
+      setStageState('stage-upload', 'active');
+      setProgress(10);
+
+      try {
+        const res = await fetch(`${API_BASE}/ingest`, { method: 'POST', body: formData });
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+        currentJobId = data.job_id;
+
+        setStageState('stage-upload', 'done');
+        setProgress(25);
+        setStageState('stage-chunking', 'active');
+        showToast(`Ingestion started: ${file.name}`, 'info');
+
+        pollIngestionStatus(currentJobId);
+        refreshJobsList();
+      } catch (err) {
+        setStageState('stage-upload', 'error');
+        showToast(`Upload failed: ${err.message}`, 'error');
+        uploadBtn.disabled = false;
+      }
+    }
+
+    function setStageState(stageId, state) {
+      const el = document.getElementById(stageId);
+      if (!el) return;
+      el.className = `stage-item ${state}`;
+      const badge = el.querySelector('.stage-badge');
+      const icon  = el.querySelector('.stage-icon');
+      const states = {
+        idle:   { badge: 'Waiting',    icon: null },
+        active: { badge: 'Running…',   icon: '⟳' },
+        done:   { badge: '✓ Done',     icon: '✅' },
+        error:  { badge: '✗ Error',    icon: '❌' },
+      };
+      if (badge) badge.textContent = states[state]?.badge || '';
+    }
+
+    function setProgress(pct) {
+      document.getElementById('progress-bar').style.width = pct + '%';
+    }
+
+    function pollIngestionStatus(jobId) {
+      if (pollTimer) clearInterval(pollTimer);
+      pollTimer = setInterval(async () => {
+        try {
+          const res = await fetch(`${API_BASE}/ingest/status/${jobId}`);
+          const job = await res.json();
+          updateIngestionUI(job);
+          if (['done', 'error'].includes(job.status)) {
+            clearInterval(pollTimer);
+            refreshJobsList();
+          }
+        } catch {}
+      }, 2000);
+    }
+
+    function updateIngestionUI(job) {
+      const statusMap = {
+        pending:     { progress: 10, stages: { upload: 'active' } },
+        running:     { progress: 20, stages: { upload: 'done', chunking: 'active' } },
+        chunking:    { progress: 30, stages: { upload: 'done', chunking: 'active' } },
+        chroma_done: { progress: 60, stages: { upload: 'done', chunking: 'done', chroma: 'done', graph: 'active' } },
+        graph_mining:{ progress: 75, stages: { upload: 'done', chunking: 'done', chroma: 'done', graph: 'active' } },
+        graph_done:  { progress: 90, stages: { upload: 'done', chunking: 'done', chroma: 'done', graph: 'done' } },
+        done:        { progress: 100,stages: { upload: 'done', chunking: 'done', chroma: 'done', graph: 'done' } },
+        error:       { progress: null, error: true },
+      };
+
+      const cfg = statusMap[job.status] || {};
+      if (cfg.progress != null) setProgress(cfg.progress);
+
+      if (cfg.stages) {
+        if (cfg.stages.upload)    setStageState('stage-upload',    cfg.stages.upload);
+        if (cfg.stages.chunking)  setStageState('stage-chunking',  cfg.stages.chunking);
+        if (cfg.stages.chroma)    setStageState('stage-chroma',    cfg.stages.chroma);
+        if (cfg.stages.graph)     setStageState('stage-graph',     cfg.stages.graph);
+      }
+
+      if (job.status === 'error') {
+        ['stage-upload','stage-chunking','stage-chroma','stage-graph'].forEach(s => {
+          const el = document.getElementById(s);
+          if (el && el.classList.contains('active')) setStageState(s, 'error');
+        });
+        showToast(`Ingestion error: ${job.error}`, 'error');
+      }
+
+      if (job.status === 'done') {
+        showToast(`✓ ${job.filename} ingested! ${job.chunks_indexed} chunks indexed.`, 'success');
+        document.getElementById('send-btn').disabled = false;
+        refreshLibrary();
+      }
+    }
+
+    async function refreshJobsList() {
+      try {
+        const res = await fetch(`${API_BASE}/ingest/jobs`);
+        const jobs = await res.json();
+        if (jobs.length === 0) return;
+        const panel = document.getElementById('jobs-panel');
+        panel.style.display = 'block';
+        const list = document.getElementById('jobs-list');
+        list.innerHTML = jobs.slice(-6).reverse().map(j => `
+          <div class="job-item">
+            <div class="job-dot ${j.status}"></div>
+            <div class="job-info">
+              <div class="job-name">${j.filename}</div>
+              <div class="job-status">${j.status} · ${j.chunks_indexed} chunks</div>
+            </div>
+          </div>
+        `).join('');
+      } catch {}
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    //  CHAT INTERFACE
+    // ─────────────────────────────────────────────────────────────
+    const chatWindow  = document.getElementById('chat-window');
+    const chatInput   = document.getElementById('chat-input');
+    const keywordInput = document.getElementById('keyword-input');
+    const sendBtn     = document.getElementById('send-btn');
+
+    // Enable send even without upload (allow querying existing index)
+    sendBtn.disabled = false;
+
+    chatInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        if (!sendBtn.disabled) sendMessage();
+      }
+    });
+
+    chatInput.addEventListener('input', () => {
+      chatInput.style.height = 'auto';
+      chatInput.style.height = Math.min(chatInput.scrollHeight, 140) + 'px';
+    });
+
+    sendBtn.addEventListener('click', sendMessage);
+
+    let isStreaming = false;
+
+    function sendMessage() {
+      const question = chatInput.value.trim();
+      const keyword  = keywordInput.value.trim();
+      if (!question || isStreaming) return;
+
+      // Remove empty state
+      document.getElementById('empty-state')?.remove();
+
+      appendUserMessage(question);
+      chatInput.value = '';
+      chatInput.style.height = 'auto';
+
+      isStreaming = true;
+      sendBtn.disabled = true;
+      resetPipeline();
+
+      streamAnswer(question, keyword);
+    }
+
+    function appendUserMessage(text) {
+      const div = document.createElement('div');
+      div.className = 'message user';
+      div.innerHTML = `
+        <div class="avatar user-avatar">👤</div>
+        <div class="bubble">${escapeHtml(text)}</div>
+      `;
+      chatWindow.appendChild(div);
+      scrollChat();
+    }
+
+    function scrollChat() {
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    let typingEl = null;
+    let botBubbleEl = null;
+    let liveNodeEl = null;
+    let answerSteps = [];
+    let answerLogs  = [];
+
+    function showTypingIndicator() {
+      typingEl = document.createElement('div');
+      typingEl.className = 'message bot';
+      typingEl.id = 'typing-indicator';
+      typingEl.innerHTML = `
+        <div class="avatar bot-avatar">🤖</div>
+        <div>
+          <div class="typing-bubble">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+          </div>
+          <div id="live-node-el" class="live-node-indicator" style="display:none;">
+            <div class="live-pulse"></div>
+            <span id="live-node-label">Processing…</span>
+          </div>
+        </div>
+      `;
+      chatWindow.appendChild(typingEl);
+      liveNodeEl = document.getElementById('live-node-el');
+      scrollChat();
+    }
+
+    function updateLiveNode(label) {
+      if (!liveNodeEl) return;
+      liveNodeEl.style.display = 'flex';
+      document.getElementById('live-node-label').textContent = `▶ ${label}`;
+    }
+
+    function removeTypingIndicator() {
+      typingEl?.remove();
+      typingEl = null;
+      liveNodeEl = null;
+    }
+
+    function appendBotMessage(text, steps, logs) {
+      const msgEl = document.createElement('div');
+      msgEl.className = 'message bot';
+      const stepsText = (steps || []).join('\n');
+      const logsText  = (logs  || []).slice(0, 30).join('\n');
+      const hasTrace  = stepsText || logsText;
+      msgEl.innerHTML = `
+        <div class="avatar bot-avatar">🤖</div>
+        <div class="bubble">
+          ${marked(text)}
+          ${hasTrace ? `
+            <div class="steps-toggle" onclick="toggleSteps(this)">
+              📋 View execution trace
+            </div>
+            <div class="steps-content">
+<strong>Workflow Steps:</strong>\n${escapeHtml(stepsText)}\n\n<strong>Logs:</strong>\n${escapeHtml(logsText)}
+            </div>
+          ` : ''}
+        </div>
+      `;
+      chatWindow.appendChild(msgEl);
+      scrollChat();
+    }
+
+    function toggleSteps(btn) {
+      const content = btn.nextElementSibling;
+      content.classList.toggle('open');
+      btn.textContent = content.classList.contains('open') ? '📋 Hide trace' : '📋 View execution trace';
+    }
+
+    // Minimal markdown renderer
+    function marked(text) {
+      return text
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g, '<em>$1</em>')
+        .replace(/`(.+?)`/g, '<code>$1</code>')
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/\n/g, '<br>')
+        .replace(/^/, '<p>')
+        .replace(/$/, '</p>');
+    }
+
+    function escapeHtml(text) {
+      return (text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    async function streamAnswer(question, keyword) {
+      showTypingIndicator();
+      answerSteps = [];
+      answerLogs  = [];
+
+      try {
+        const res = await fetch(`${API_BASE}/ask`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question, graph_keyword: keyword }),
+        });
+
+        if (!res.ok) {
+          const err = await res.text();
+          throw new Error(err);
+        }
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop(); // keep incomplete line
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const raw = line.slice(6).trim();
+              try {
+                const event = JSON.parse(raw);
+                handleSSEEvent(event);
+              } catch {}
+            }
+          }
+        }
+      } catch (err) {
+        removeTypingIndicator();
+        appendBotMessage(`⚠️ Error: ${err.message}`, [], []);
+        showToast(`Error: ${err.message}`, 'error');
+      } finally {
+        isStreaming = false;
+        sendBtn.disabled = false;
+        removeTypingIndicator();
+      }
+    }
+
+    function handleSSEEvent(event) {
+      switch (event.type) {
+
+        case 'status':
+          updateLiveNode(event.data?.message || 'Processing…');
+          break;
+
+        case 'node_start': {
+          const nodeId = event.data?.node;
+          const label  = event.data?.label || nodeId;
+          activateNode(nodeId);
+          const pill = document.getElementById(`pill-${nodeId}`);
+          pill?.classList.add('active');
+          pill?.classList.remove('done');
+          updateLiveNode(label);
+          break;
+        }
+
+        case 'node_end': {
+          const nodeId = event.data?.node;
+          completeNode(nodeId);
+          break;
+        }
+
+        case 'log':
+          answerLogs.push(event.data?.message || '');
+          break;
+
+        case 'answer':
+          removeTypingIndicator();
+          appendBotMessage(
+            event.data?.text || '(No answer generated)',
+            event.data?.steps,
+            event.data?.logs
+          );
+          break;
+
+        case 'error':
+          removeTypingIndicator();
+          appendBotMessage(`⚠️ ${event.data?.message}`, [], []);
+          showToast(event.data?.message, 'error');
+          break;
+
+        case 'done':
+          // Stream finished
+          break;
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    //  LIBRARY MANAGEMENT
+    // ─────────────────────────────────────────────────────────────
+    async function refreshLibrary() {
+      try {
+        const res = await fetch(`${API_BASE}/documents`);
+        const data = await res.json();
+        const list = document.getElementById('library-list');
+        if (data.titles && data.titles.length > 0) {
+          list.innerHTML = data.titles.map(title => `
+            <div class="library-item" title="${escapeHtml(title)}">
+              <span class="library-icon">📄</span>
+              <span class="library-name">${escapeHtml(title)}</span>
+            </div>
+          `).join('');
+        } else {
+          list.innerHTML = `
+            <div style="font-size:0.8rem; color:var(--text-muted); text-align:center; padding:10px 0;">
+              No documents indexed yet.
+            </div>
+          `;
+        }
+      } catch (err) {
+        document.getElementById('library-list').innerHTML = `
+          <div style="font-size:0.8rem; color:var(--red); text-align:center; padding:10px 0;">
+            Failed to load library: ${escapeHtml(err.message)}
+          </div>
+        `;
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    //  INITIAL HEALTH CHECK
+    // ─────────────────────────────────────────────────────────────
+    (async function checkHealth() {
+      try {
+        const res = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(3000) });
+        if (res.ok) {
+          showToast('✓ Connected to RAG API', 'success');
+          refreshJobsList();
+          refreshLibrary();
+        }
+      } catch {
+        showToast('⚠ API not reachable — start the FastAPI server first', 'error');
+      }
+    })();
+
+    // ─────────────────────────────────────────────────────────────
+    //  NEO4J FORCE-DIRECTED GRAPH EXPLORER
+    // ─────────────────────────────────────────────────────────────
+    (function initGraphExplorer() {
+      const canvas    = document.getElementById('neo4j-canvas');
+      const wrap      = document.getElementById('graph-canvas-wrap');
+      const tooltip   = document.getElementById('graph-tooltip');
+      const overlay   = document.getElementById('graph-overlay');
+      const spinner   = document.getElementById('graph-spinner');
+      const overlayTx = document.getElementById('graph-overlay-text');
+      const ctx       = canvas.getContext('2d');
+
+      // ── State ──────────────────────────────────────────────────
+      let nodes = [], edges = [];
+      let simNodes = [];  // physics nodes
+      let camX = 0, camY = 0, camScale = 1;
+      let dragging = null, dragOffX = 0, dragOffY = 0;
+      let panStart = null, panCamStart = null;
+      let hoveredNode = null;
+      let animId = null;
+      let labelColorMap = {};
+
+      const LABEL_PALETTE = [
+        '#a855f7','#00d4ff','#10b981','#f59e0b','#ec4899',
+        '#6366f1','#14b8a6','#f97316','#84cc16','#e879f9'
+      ];
+
+      // ── Resize ─────────────────────────────────────────────────
+      function resizeCanvas() {
+        canvas.width  = wrap.clientWidth;
+        canvas.height = wrap.clientHeight;
+      }
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas();
+
+      // ── Build sim nodes ────────────────────────────────────────
+      function buildSim(gNodes, gEdges) {
+        nodes = gNodes;
+        edges = gEdges;
+
+        // Assign colors per label
+        const labelSet = [...new Set(nodes.map(n => n.label))];
+        labelSet.forEach((lbl, i) => {
+          labelColorMap[lbl] = LABEL_PALETTE[i % LABEL_PALETTE.length];
+        });
+
+        // Initial positions — spread in circle
+        simNodes = nodes.map((n, i) => {
+          const angle = (2 * Math.PI * i) / nodes.length;
+          const r = Math.min(canvas.width, canvas.height) * 0.35;
+          return {
+            ...n,
+            x: canvas.width  / 2 + r * Math.cos(angle),
+            y: canvas.height / 2 + r * Math.sin(angle),
+            vx: 0, vy: 0,
+            pinned: false,
+            mass: 1 + (edges.filter(e => e.source === n.id || e.target === n.id).length * 0.3),
+          };
+        });
+
+        fitView();
+        renderLegend(labelSet);
+        document.getElementById('graph-stats').style.display = 'flex';
+        document.getElementById('stat-nodes').textContent = nodes.length + ' nodes';
+        document.getElementById('stat-edges').textContent = edges.length + ' edges';
+      }
+
+      // ── Legend ─────────────────────────────────────────────────
+      function renderLegend(labelSet) {
+        const leg = document.getElementById('graph-legend');
+        leg.innerHTML = labelSet.map(lbl => `
+          <div class="legend-item">
+            <div class="legend-dot" style="background:${labelColorMap[lbl] || '#888'};"></div>
+            <span style="font-size:0.75rem;color:var(--text-secondary);">${lbl}</span>
+          </div>
+        `).join('');
+      }
+
+      // ── Physics simulation step ────────────────────────────────
+      function simulate() {
+        if (simNodes.length === 0) return;
+
+        const W = canvas.width, H = canvas.height;
+        const repulsion = 2200;
+        const springLen = 120;
+        const springK   = 0.04;
+        const damping   = 0.82;
+        const centerK   = 0.004;
+        const cx = W / 2, cy = H / 2;
+
+        // Repulsion between all node pairs
+        for (let i = 0; i < simNodes.length; i++) {
+          for (let j = i + 1; j < simNodes.length; j++) {
+            const a = simNodes[i], b = simNodes[j];
+            let dx = b.x - a.x, dy = b.y - a.y;
+            const dist = Math.sqrt(dx*dx + dy*dy) || 1;
+            const force = repulsion / (dist * dist);
+            const fx = (dx / dist) * force;
+            const fy = (dy / dist) * force;
+            if (!a.pinned) { a.vx -= fx; a.vy -= fy; }
+            if (!b.pinned) { b.vx += fx; b.vy += fy; }
+          }
+        }
+
+        // Spring attraction along edges
+        for (const edge of edges) {
+          const a = simNodes.find(n => n.id === edge.source);
+          const b = simNodes.find(n => n.id === edge.target);
+          if (!a || !b) continue;
+          const dx = b.x - a.x, dy = b.y - a.y;
+          const dist = Math.sqrt(dx*dx + dy*dy) || 1;
+          const force = (dist - springLen) * springK;
+          const fx = (dx / dist) * force;
+          const fy = (dy / dist) * force;
+          if (!a.pinned) { a.vx += fx; a.vy += fy; }
+          if (!b.pinned) { b.vx -= fx; b.vy -= fy; }
+        }
+
+        // Weak center gravity
+        simNodes.forEach(n => {
+          if (n.pinned) return;
+          n.vx += (cx - n.x) * centerK;
+          n.vy += (cy - n.y) * centerK;
+          n.vx *= damping;
+          n.vy *= damping;
+          n.x += n.vx;
+          n.y += n.vy;
+        });
+      }
+
+      // ── Render frame ───────────────────────────────────────────
+      function render() {
+        const W = canvas.width, H = canvas.height;
+        ctx.clearRect(0, 0, W, H);
+
+        ctx.save();
+        ctx.translate(camX, camY);
+        ctx.scale(camScale, camScale);
+
+        // Background dot grid
+        ctx.fillStyle = 'rgba(0,212,255,0.04)';
+        const gridSpacing = 40;
+        const gOx = (-camX / camScale) % gridSpacing;
+        const gOy = (-camY / camScale) % gridSpacing;
+        for (let gx = gOx - gridSpacing; gx < W / camScale + gridSpacing; gx += gridSpacing) {
+          for (let gy = gOy - gridSpacing; gy < H / camScale + gridSpacing; gy += gridSpacing) {
+            ctx.beginPath();
+            ctx.arc(gx, gy, 1, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        if (simNodes.length === 0) { ctx.restore(); return; }
+
+        // Draw edges
+        for (const edge of edges) {
+          const a = simNodes.find(n => n.id === edge.source);
+          const b = simNodes.find(n => n.id === edge.target);
+          if (!a || !b) continue;
+
+          const isHighlighted = hoveredNode && (a.id === hoveredNode.id || b.id === hoveredNode.id);
+          const alpha = isHighlighted ? 0.75 : 0.2;
+          const color = isHighlighted ? '#a855f7' : '#6b7280';
+
+          // Draw line with arrow
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.strokeStyle = color;
+          ctx.globalAlpha = alpha;
+          ctx.lineWidth = isHighlighted ? 1.5 : 0.8;
+          ctx.setLineDash(isHighlighted ? [] : [4, 4]);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.globalAlpha = 1;
+
+          // Arrow head
+          const dx = b.x - a.x, dy = b.y - a.y;
+          const dist = Math.sqrt(dx*dx + dy*dy) || 1;
+          const nodeR = 20;
+          const tx = b.x - (dx / dist) * (nodeR + 4);
+          const ty = b.y - (dy / dist) * (nodeR + 4);
+          const angle = Math.atan2(dy, dx);
+          const arrowLen = 8;
+          ctx.globalAlpha = alpha;
+          ctx.fillStyle = color;
+          ctx.beginPath();
+          ctx.moveTo(tx, ty);
+          ctx.lineTo(tx - arrowLen * Math.cos(angle - 0.4), ty - arrowLen * Math.sin(angle - 0.4));
+          ctx.lineTo(tx - arrowLen * Math.cos(angle + 0.4), ty - arrowLen * Math.sin(angle + 0.4));
+          ctx.closePath();
+          ctx.fill();
+          ctx.globalAlpha = 1;
+
+          // Edge label on hover
+          if (isHighlighted) {
+            const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+            ctx.save();
+            ctx.font = 'bold 8px Inter';
+            ctx.fillStyle = '#a855f7';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            const tw = ctx.measureText(edge.type).width + 8;
+            ctx.fillStyle = 'rgba(10,14,28,0.85)';
+            ctx.fillRect(mx - tw/2, my - 7, tw, 14);
+            ctx.fillStyle = '#c084fc';
+            ctx.fillText(edge.type, mx, my);
+            ctx.restore();
+          }
+        }
+
+        // Draw nodes
+        simNodes.forEach(node => {
+          const r = 20;
+          const color = labelColorMap[node.label] || '#888';
+          const isHov = hoveredNode && node.id === hoveredNode.id;
+
+          // Glow on hover / pinned
+          if (isHov || node.pinned) {
+            const grad = ctx.createRadialGradient(node.x, node.y, r, node.x, node.y, r * 3.5);
+            grad.addColorStop(0, color + '30');
+            grad.addColorStop(1, 'transparent');
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, r * 3.5, 0, Math.PI * 2);
+            ctx.fillStyle = grad;
+            ctx.fill();
+          }
+
+          // Outer ring
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, r + 2, 0, Math.PI * 2);
+          ctx.fillStyle = color + (isHov ? '40' : '18');
+          ctx.fill();
+
+          // Main circle
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, r, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(8, 13, 26, 0.92)';
+          ctx.strokeStyle = color + (isHov ? 'ff' : '99');
+          ctx.lineWidth = isHov ? 2 : 1.5;
+          ctx.fill();
+          ctx.stroke();
+
+          // Pin indicator
+          if (node.pinned) {
+            ctx.beginPath();
+            ctx.arc(node.x + r - 4, node.y - r + 4, 4, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+          }
+
+          // Node name text
+          const maxChars = 9;
+          const displayName = node.name.length > maxChars ? node.name.slice(0, maxChars - 1) + '…' : node.name;
+          ctx.font = `600 8px Inter`;
+          ctx.fillStyle = isHov ? '#fff' : (color + 'cc');
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(displayName, node.x, node.y);
+
+          // Label below
+          ctx.font = `500 7px Inter`;
+          ctx.fillStyle = color + '70';
+          ctx.fillText(node.label, node.x, node.y + r + 10);
+        });
+
+        ctx.restore();
+      }
+
+      // ── Animation loop ─────────────────────────────────────────
+      let simTick = 0;
+      function loop() {
+        if (simTick < 300) { simulate(); simTick++; }
+        render();
+        animId = requestAnimationFrame(loop);
+      }
+
+      // ── Fit to view ────────────────────────────────────────────
+      function fitView() {
+        if (simNodes.length === 0) return;
+        const pad = 60;
+        const xs = simNodes.map(n => n.x), ys = simNodes.map(n => n.y);
+        const minX = Math.min(...xs), maxX = Math.max(...xs);
+        const minY = Math.min(...ys), maxY = Math.max(...ys);
+        const W = canvas.width, H = canvas.height;
+        const scaleX = (W - pad * 2) / (maxX - minX || 1);
+        const scaleY = (H - pad * 2) / (maxY - minY || 1);
+        camScale = Math.min(scaleX, scaleY, 2);
+        camX = W / 2 - ((minX + maxX) / 2) * camScale;
+        camY = H / 2 - ((minY + maxY) / 2) * camScale;
+      }
+
+      // ── World coords from canvas coords ────────────────────────
+      function toWorld(cx, cy) {
+        return { x: (cx - camX) / camScale, y: (cy - camY) / camScale };
+      }
+
+      function getNodeAt(wx, wy) {
+        return simNodes.find(n => {
+          const dx = n.x - wx, dy = n.y - wy;
+          return Math.sqrt(dx*dx + dy*dy) < 24;
+        });
+      }
+
+      // ── Mouse/Touch handlers ────────────────────────────────────
+      canvas.addEventListener('mousedown', e => {
+        const rect = canvas.getBoundingClientRect();
+        const cx = e.clientX - rect.left, cy = e.clientY - rect.top;
+        const wp = toWorld(cx, cy);
+        const node = getNodeAt(wp.x, wp.y);
+        if (node) {
+          dragging = node;
+          dragOffX = wp.x - node.x;
+          dragOffY = wp.y - node.y;
+        } else {
+          panStart = { x: e.clientX, y: e.clientY };
+          panCamStart = { x: camX, y: camY };
+        }
+      });
+
+      canvas.addEventListener('mousemove', e => {
+        const rect = canvas.getBoundingClientRect();
+        const cx = e.clientX - rect.left, cy = e.clientY - rect.top;
+        const wp = toWorld(cx, cy);
+
+        if (dragging) {
+          dragging.x = wp.x - dragOffX;
+          dragging.y = wp.y - dragOffY;
+          dragging.vx = 0; dragging.vy = 0;
+          dragging.pinned = true;
+          simTick = 0;
+        } else if (panStart) {
+          camX = panCamStart.x + (e.clientX - panStart.x);
+          camY = panCamStart.y + (e.clientY - panStart.y);
+        } else {
+          const node = getNodeAt(wp.x, wp.y);
+          hoveredNode = node || null;
+          // Show / hide tooltip
+          if (node) {
+            tooltip.style.display = 'block';
+            const screenX = node.x * camScale + camX;
+            const screenY = node.y * camScale + camY;
+            tooltip.style.left = Math.min(screenX + 28, wrap.clientWidth - 260) + 'px';
+            tooltip.style.top  = Math.max(screenY - 20, 8) + 'px';
+            document.getElementById('tt-label').textContent = node.label;
+            document.getElementById('tt-name').textContent  = node.name;
+            document.getElementById('tt-desc').textContent  = node.description || '';
+          } else {
+            tooltip.style.display = 'none';
+          }
+        }
+      });
+
+      canvas.addEventListener('mouseup', e => {
+        if (!dragging && panStart) {
+          // if barely moved, it was a click — unpin if clicked pinned node
+          const dx = Math.abs(e.clientX - panStart.x);
+          const dy = Math.abs(e.clientY - panStart.y);
+          if (dx < 4 && dy < 4) {
+            const rect = canvas.getBoundingClientRect();
+            const wp = toWorld(e.clientX - rect.left, e.clientY - rect.top);
+            const node = getNodeAt(wp.x, wp.y);
+            if (node) { node.pinned = !node.pinned; }
+          }
+        }
+        dragging = null;
+        panStart = null;
+        panCamStart = null;
+      });
+
+      canvas.addEventListener('mouseleave', () => {
+        hoveredNode = null;
+        tooltip.style.display = 'none';
+        dragging = null;
+        panStart = null;
+      });
+
+      // Scroll-to-zoom
+      canvas.addEventListener('wheel', e => {
+        e.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+        const delta = e.deltaY > 0 ? 0.9 : 1.1;
+        const newScale = Math.max(0.15, Math.min(camScale * delta, 5));
+        camX = mx - (mx - camX) * (newScale / camScale);
+        camY = my - (my - camY) * (newScale / camScale);
+        camScale = newScale;
+      }, { passive: false });
+
+      // Zoom buttons
+      document.getElementById('zoom-in-btn').addEventListener('click', () => {
+        const cx = canvas.width / 2, cy = canvas.height / 2;
+        const newScale = Math.min(camScale * 1.3, 5);
+        camX = cx - (cx - camX) * (newScale / camScale);
+        camY = cy - (cy - camY) * (newScale / camScale);
+        camScale = newScale;
+      });
+      document.getElementById('zoom-out-btn').addEventListener('click', () => {
+        const cx = canvas.width / 2, cy = canvas.height / 2;
+        const newScale = Math.max(camScale * 0.77, 0.15);
+        camX = cx - (cx - camX) * (newScale / camScale);
+        camY = cy - (cy - camY) * (newScale / camScale);
+        camScale = newScale;
+      });
+      document.getElementById('zoom-fit-btn').addEventListener('click', fitView);
+
+      // ── Fetch & render graph ────────────────────────────────────
+      async function loadGraph(search = '') {
+        spinner.style.display = 'block';
+        overlayTx.textContent = 'Loading graph from Neo4j…';
+        overlay.style.pointerEvents = 'none';
+
+        try {
+          const url = search ? `${API_BASE}/graph?search=${encodeURIComponent(search)}&limit=80`
+                              : `${API_BASE}/graph?limit=80`;
+          const res = await fetch(url);
+          const data = await res.json();
+
+          if (data.error) {
+            overlayTx.textContent = 'Neo4j unavailable: ' + data.error.slice(0, 80);
+            spinner.style.display = 'none';
+            return;
+          }
+
+          if (data.nodes.length === 0) {
+            overlayTx.textContent = search
+              ? `No nodes matching "${search}" — try a broader term or ingest a document first.`
+              : 'Knowledge graph is empty. Ingest a PDF to populate it.';
+            spinner.style.display = 'none';
+            simNodes = []; nodes = []; edges = [];
+            document.getElementById('graph-legend').innerHTML = '';
+            document.getElementById('graph-stats').style.display = 'none';
+            return;
+          }
+
+          overlay.style.display = 'none';
+          buildSim(data.nodes, data.edges);
+          simTick = 0;
+          if (!animId) loop();
+
+        } catch (err) {
+          overlayTx.textContent = 'Error: ' + err.message;
+          spinner.style.display = 'none';
+        }
+      }
+
+      // ── Controls wiring ─────────────────────────────────────────
+      document.getElementById('graph-search-btn').addEventListener('click', () => {
+        const val = document.getElementById('graph-search-input').value.trim();
+        loadGraph(val);
+      });
+
+      document.getElementById('graph-search-input').addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+          const val = document.getElementById('graph-search-input').value.trim();
+          loadGraph(val);
+        }
+      });
+
+      document.getElementById('graph-reset-btn').addEventListener('click', () => {
+        document.getElementById('graph-search-input').value = '';
+        overlay.style.display = 'flex';
+        spinner.style.display = 'none';
+        loadGraph('');
+      });
+
+      // Start render loop (renders empty canvas with grid)
+      loop();
+    })();
+
+  </script>
+</body>
+</html>

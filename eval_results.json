@@ -1,0 +1,498 @@
+{
+  "timestamp": "2026-06-16T22:09:48.904377",
+  "n_queries": 25,
+  "K": 4,
+  "naive": {
+    "hit_rate": 100.0,
+    "mrr": 0.973,
+    "faithfulness": 0.632,
+    "relevance": 0.832,
+    "latency_p50_ms": 4694.0,
+    "latency_p95_ms": 6862.0
+  },
+  "advanced": {
+    "hit_rate": 96.0,
+    "mrr": 0.96,
+    "faithfulness": 0.628,
+    "relevance": 0.872,
+    "latency_p50_ms": 11941.0,
+    "latency_p95_ms": 16524.0
+  },
+  "per_query": [
+    {
+      "query": "What is the concept of a relation in mathematics?",
+      "naive": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 1.0,
+        "relevance": 1.0,
+        "latency_ms": 4965.710500000569,
+        "answer": "A relation R from a non-empty set A to a non-empty set B is a subset of the cartesian product A \u00d7 B. This subset is derived by describing a relationship between the first element and the second element of the ordered pairs in A \u00d7 B."
+      },
+      "advanced": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 0.5,
+        "relevance": 1.0,
+        "latency_ms": 12278.094500004954,
+        "answer": "In mathematics, a relation R from a non-empty set A to a non-empty set B is defined as a subset of the cartesian product A \u00d7 B. This subset is derived by describing a relationship between the first element and the second element of the ordered pairs in A \u00d7 B. A relation involves pairs of objects.\n\nExamples of relations include:\n*   Number m is less than number n.\n*   Line l is parallel to line m.\n*   Set A is a subset of set B.\n\nIn a relation, the second element of an ordered pair is called the image of the first element."
+      }
+    },
+    {
+      "query": "What is the domain of a relation and how is it defined?",
+      "naive": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 0.0,
+        "relevance": 0.9,
+        "latency_ms": 1723.8672000021324,
+        "answer": "The domain of a relation R from a set A to a set B is the set of all first elements of the ordered pairs in the relation R. It is defined as Definition 3."
+      },
+      "advanced": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 0.0,
+        "relevance": 1.0,
+        "latency_ms": 10810.760799999116,
+        "answer": "The domain of a relation R from a set A to a set B is defined as the set of all first elements of the ordered pairs in that relation R."
+      }
+    },
+    {
+      "query": "What is the difference between a relation and a function?",
+      "naive": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 1.0,
+        "relevance": 1.0,
+        "latency_ms": 4741.806300000462,
+        "answer": "A relation R from a non-empty set A to a non-empty set B is a subset of the cartesian product A \u00d7 B. A function f is a relation from a non-empty set A to a non-empty set B such that the domain of f is A and no two distinct ordered pairs in f have the same first element, meaning every element of set A has one and only one image in set B."
+      },
+      "advanced": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 1.0,
+        "relevance": 1.0,
+        "latency_ms": 13066.723600000842,
+        "answer": "A relation R from a non-empty set A to a non-empty set B is a subset of the cartesian product A \u00d7 B, where the second element is called the image of the first element.\n\nA function f is a specific type of relation from a non-empty set A to a non-empty set B that meets two conditions:\n1.  The domain of f is A, meaning every element of set A has an image.\n2.  No two distinct ordered pairs in f have the same first element, which means every element of set A has one and only one image in set B.\n\nFor example, the relation R = {(2,2),(2,4),(3,3), (4,4)} is not a function because the same first element 2 corresponds to two different images, 2 and 4. In contrast, R = {(2,1),(3,1), (4,2)} is a function because 2, 3, and 4 are elements of the domain of R having unique images."
+      }
+    },
+    {
+      "query": "What is an empty relation?",
+      "naive": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 1.0,
+        "relevance": 0.7,
+        "latency_ms": 3826.8723000001046,
+        "answer": "The provided context does not define an empty relation. It states that a relation R from a non-empty set A to a non-empty set B is a subset of the cartesian product A \u00d7 B."
+      },
+      "advanced": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 1.0,
+        "relevance": 0.1,
+        "latency_ms": 15337.314199998218,
+        "answer": "This information is not provided in the given context. The context defines a relation as a subset of a Cartesian product A \u00d7 B, and discusses properties like domain and range, but does not explicitly define an \"empty relation.\""
+      }
+    },
+    {
+      "query": "What is the range of a relation?",
+      "naive": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 0.0,
+        "relevance": 1.0,
+        "latency_ms": 3907.192799997574,
+        "answer": "The provided context defines the domain of a relation (Definition 3) but does not explicitly define the range of a relation. It does, however, provide examples of ranges for specific relations."
+      },
+      "advanced": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 1.0,
+        "relevance": 0.2,
+        "latency_ms": 10798.215800001344,
+        "answer": "The provided context defines the range of a function as \"the set of images.\" While it mentions that relations have a range, it does not explicitly define what the range of a relation is."
+      }
+    },
+    {
+      "query": "What is the Cartesian product of two sets?",
+      "naive": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 1.0,
+        "relevance": 1.0,
+        "latency_ms": 4693.58359999751,
+        "answer": "The Cartesian product of two sets P and Q is a set of ordered pairs (p,q), where p is an element of P and q is an element of Q."
+      },
+      "advanced": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 0.0,
+        "relevance": 1.0,
+        "latency_ms": 11940.501299999596,
+        "answer": "Given two non-empty sets P and Q, the Cartesian product P \u00d7 Q is the set of all ordered pairs of elements from P and Q."
+      }
+    },
+    {
+      "query": "How many elements does a Cartesian product A x B contain if A has m elements and B has n elements?",
+      "naive": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 0.5,
+        "relevance": 0.6,
+        "latency_ms": 10811.701899998297,
+        "answer": "The context states that if there are 3 elements in each of sets A and B, the Cartesian product A \u00d7 B contains 9 pairs. It also shows that if P has 3 elements and Q has 1 element, P \u00d7 Q contains 3 elements."
+      },
+      "advanced": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 0.7,
+        "relevance": 1.0,
+        "latency_ms": 10787.072200000694,
+        "answer": "If set A has m elements and set B has n elements, the Cartesian product A x B will contain m \u00d7 n elements.\n\nThis is illustrated by an example where there are 3 elements in each of sets A and B, resulting in 9 pairs in their Cartesian product (3 \u00d7 3 = 9). Another example shows sets A= {a1, a2} (2 elements) and B = {b1, b2, b3, b4} (4 elements), which would result in 2 \u00d7 4 = 8 possible codes."
+      }
+    },
+    {
+      "query": "What is a reflexive relation?",
+      "naive": {
+        "hit": true,
+        "rr": 0.3333333333333333,
+        "faithfulness": 1.0,
+        "relevance": 0.7,
+        "latency_ms": 4510.6386999977985,
+        "answer": "The provided context does not define what a reflexive relation is. However, it describes a property where \"(a,a) \u2208 R for all a \u2208 Q\"."
+      },
+      "advanced": {
+        "hit": false,
+        "rr": 0.0,
+        "faithfulness": 1.0,
+        "relevance": 0.1,
+        "latency_ms": 11692.643800000951,
+        "answer": "Based on the provided context, there is no definition for a reflexive relation."
+      }
+    },
+    {
+      "query": "Explain the discovery of the electron and who discovered it.",
+      "naive": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 0.7,
+        "relevance": 0.7,
+        "latency_ms": 6190.800999997009,
+        "answer": "The context states that Thomson was able to determine the value of e/me for the electron. Michael Faraday's work in the 1830s suggested the particulate nature of electricity. The provided context does not explicitly state who discovered the electron."
+      },
+      "advanced": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 0.4,
+        "relevance": 1.0,
+        "latency_ms": 14712.557500002731,
+        "answer": "The discovery of the electron involved experiments with cathode ray discharge tubes.\n\nThomson determined the ratio of the charge (e) to the mass of the electron (me) by using a cathode ray tube and applying electrical and magnetic fields perpendicular to each other and to the path of the electrons. When only an electric field was applied, the electrons deviated from their path. Similarly, when only a magnetic field was applied, the electrons struck the tube at a different point. By carefully balancing the electrical and magnetic field strengths, Thomson was able to bring the electron back to its original path. He determined the value of e/me as 1.758820 \u00d7 10^11 C kg\u20131.\n\nLater, R.A. Millikan (1868-1953) devised the oil drop experiment (1906-14) to determine the charge on the electrons, finding it to be \u2013 1.6 \u00d7 10\u201319 C.\n\nMichael Faraday also contributed to the understanding of electricity and chemical reactions at electrodes in 1830, and in the mid-1850s, he and other scientists began studying electrical discharge in partially evacuated tubes, known as cathode ray discharge tubes."
+      }
+    },
+    {
+      "query": "What was Rutherford's experiment and what did it prove?",
+      "naive": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 0.6,
+        "relevance": 1.0,
+        "latency_ms": 4735.9012000015355,
+        "answer": "Rutherford's experiment was the alpha-particle scattering experiment in 1909.\n\nIt proved that:\n*   Most of the space in the atom is empty.\n*   The positive charge of the atom is not evenly spread, but rather concentrated in a tiny positively charged region, disproving Thomson's model."
+      },
+      "advanced": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 0.4,
+        "relevance": 1.0,
+        "latency_ms": 15791.550200003257,
+        "answer": "Rutherford conducted the alpha-particle scattering experiment in 1909. In this experiment, a stream of high energy alpha-particles from a radioactive source was directed at a thin target. Most of these alpha-particles passed through undeflected, while a few positively charged alpha-particles were deflected, with some even bouncing back (deflected by nearly 180\u00b0).\n\nThis experiment proved Thomson's model of the atom wrong, which proposed a uniform sphere of positive electricity with electrons embedded and mass evenly spread.\n\nRutherford's experiment led to the following conclusions regarding the structure of the atom:\n*   Most of the space in the atom is empty.\n*   The positive charge of the atom is not spread throughout but is concentrated in a tiny, positively charged nucleus at its center.\n*   Electrons revolve around this nucleus in circular orbits."
+      }
+    },
+    {
+      "query": "What is the Bohr model of the atom?",
+      "naive": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 0.7,
+        "relevance": 1.0,
+        "latency_ms": 4019.487300000037,
+        "answer": "In the Bohr model, an electron is regarded as a charged particle moving in a well-defined circular orbit about the nucleus. The wave character of the electron is ignored. An electron can move only in those orbits for which its angular momentum is an integral multiple of h/2\u03c0, meaning angular momentum is quantized. Radiation is emitted or absorbed only when an electron transitions from one quantized value of angular momentum to another, allowing only certain fixed orbits."
+      },
+      "advanced": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 0.9,
+        "relevance": 1.0,
+        "latency_ms": 11798.638799999026,
+        "answer": "In the Bohr model, an electron is regarded as a charged particle moving in a well-defined circular orbit about the nucleus. An electron can move only in those orbits for which its angular momentum is an integral multiple of h/2\u03c0, meaning angular momentum is quantised. Radiation is emitted or absorbed only when the electron transitions from one quantised value of angular momentum to another, allowing only certain fixed orbits."
+      }
+    },
+    {
+      "query": "What are quantum numbers and what do they represent?",
+      "naive": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 0.4,
+        "relevance": 0.7,
+        "latency_ms": 6500.656199998048,
+        "answer": "Quantum numbers are used to precisely distinguish atomic orbitals. Each orbital is designated by three quantum numbers (n, l, and ml), and a fourth, the electron spin quantum number (ms), was later proposed.\n\nThey represent:\n*   **l (azimuthal quantum number):** Defines the three-dimensional shape of the orbital.\n*   **ms (electron spin quantum number):** Represents the electron's spin around its own axis.\n*   Generally, they define the size, shape, and orientation of an orbital."
+      },
+      "advanced": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 0.4,
+        "relevance": 1.0,
+        "latency_ms": 12388.957700000901,
+        "answer": "Atomic orbitals are precisely distinguished by what are known as quantum numbers. Each orbital is designated by three quantum numbers: n, l, and ml. A fourth quantum number, ms, also exists.\n\nHere's what each represents:\n*   **n (principal quantum number)**: This is a positive integer (1, 2, 3, etc.) and determines the size of the orbital.\n*   **l (azimuthal, orbital angular momentum, or subsidiary quantum number)**: This defines the three-dimensional shape of the orbital. To some extent, it also determines the energy of the orbital in a multi-electron atom.\n*   **ml (magnetic quantum number)**: This designates the orientation of the orbital.\n*   **ms (electron spin quantum number)**: This represents the intrinsic spin angular quantum number of an electron, which spins around its own axis."
+      }
+    },
+    {
+      "query": "What is the Aufbau principle for filling electrons?",
+      "naive": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 1.0,
+        "relevance": 1.0,
+        "latency_ms": 3077.4294000002556,
+        "answer": "Electrons first occupy the lowest energy orbital available to them and enter into higher energy orbitals only after the lower energy orbitals are filled. In other words, orbitals are filled in order of their increasing energies."
+      },
+      "advanced": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 1.0,
+        "relevance": 1.0,
+        "latency_ms": 12772.292800000287,
+        "answer": "The orbitals are filled in order of their increasing energies. Electrons first occupy the lowest energy orbital available to them and enter into higher energy orbitals only after the lower energy orbitals are filled."
+      }
+    },
+    {
+      "query": "What are isotopes?",
+      "naive": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 1.0,
+        "relevance": 0.9,
+        "latency_ms": 2856.36379999778,
+        "answer": "Isotopes are atoms with different atomic mass numbers, due to the presence of different numbers of neutrons in their nuclei."
+      },
+      "advanced": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 1.0,
+        "relevance": 1.0,
+        "latency_ms": 7028.745300005539,
+        "answer": "Isotopes are atoms with different atomic mass numbers. The difference between isotopes is due to the presence of a different number of neutrons in the nucleus."
+      }
+    },
+    {
+      "query": "What is electromagnetic radiation and what are its properties?",
+      "naive": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 0.7,
+        "relevance": 1.0,
+        "latency_ms": 5497.648600001412,
+        "answer": "Electromagnetic radiation consists of alternating electrical and magnetic fields that are produced and transmitted when an electrically charged particle moves under acceleration. These are also called electromagnetic waves.\n\nIts properties include:\n*   They do not require a medium and can move in a vacuum.\n*   There are many types that differ in wavelength (or frequency), constituting the electromagnetic spectrum.\n*   They possess a dual character, meaning they have both wave-like and particle-like properties. The wave behavior accounts for interference and diffraction, while the particle nature explains black body radiation and the photoelectric effect."
+      },
+      "advanced": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 0.8,
+        "relevance": 1.0,
+        "latency_ms": 12689.130400001886,
+        "answer": "Electromagnetic radiation (or electromagnetic waves) are produced and transmitted when an electrically charged particle moves under acceleration, creating alternating electrical and magnetic fields.\n\nIts properties include:\n*   **Dual Nature:** It possesses both wave-like and particle-like properties.\n*   **Medium Requirement:** It does not require a medium and can move in vacuum.\n*   **Spectrum:** There are many types of electromagnetic radiations, which differ from one another in wavelength (or frequency), constituting the electromagnetic spectrum."
+      }
+    },
+    {
+      "query": "What is the periodic law in chemistry?",
+      "naive": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 1.0,
+        "relevance": 1.0,
+        "latency_ms": 2790.6110000039916,
+        "answer": "The physical and chemical properties of the elements are periodic functions of their atomic numbers."
+      },
+      "advanced": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 1.0,
+        "relevance": 1.0,
+        "latency_ms": 8236.472500000673,
+        "answer": "The physical and chemical properties of the elements are periodic functions of their atomic numbers."
+      }
+    },
+    {
+      "query": "Who developed the modern periodic table?",
+      "naive": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 0.1,
+        "relevance": 1.0,
+        "latency_ms": 5152.987699999358,
+        "answer": "Dmitri Mendeleev is generally credited with the development of the periodic table. Lothar Meyer also developed a table that closely resembles the Modern Periodic Table, and the Periodic Law owes its development to both Dmitri Mendeleev and Lothar Meyer."
+      },
+      "advanced": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 0.0,
+        "relevance": 1.0,
+        "latency_ms": 16524.424800001725,
+        "answer": "Dmitri Mendeleev is generally credited with the development of the Modern Periodic Table. Lothar Meyer also developed a table of the elements that closely resembles the Modern Periodic Table, but his work was not published until after Mendeleev's."
+      }
+    },
+    {
+      "query": "What are periods and groups in the periodic table?",
+      "naive": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 0.2,
+        "relevance": 1.0,
+        "latency_ms": 3662.90840000147,
+        "answer": "Groups are vertical columns where elements having similar outer electronic configurations in their atoms are arranged. According to IUPAC, groups are numbered from 1 to 18.\n\nPeriods indicate the value of 'n' for the outermost or valence shell, with successive periods associated with the filling of the next higher principal energy level. There are altogether seven periods."
+      },
+      "advanced": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 0.2,
+        "relevance": 1.0,
+        "latency_ms": 10568.352599999344,
+        "answer": "In the periodic table:\n\n*   **Groups** are vertical columns where elements having similar outer electronic configurations in their atoms are arranged. They are also referred to as families. According to the International Union of Pure and Applied Chemistry (IUPAC), groups are numbered from 1 to 18.\n*   **Periods** are horizontal rows. There are altogether seven periods. The period number corresponds to the highest principal quantum number (n) of the elements in that period, indicating the value of 'n' for the outermost or valence shell. Successive periods are associated with the filling of the next higher principal energy level (n = 1, n = 2, etc.). The first period contains 2 elements."
+      }
+    },
+    {
+      "query": "What are s-block elements?",
+      "naive": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 1.0,
+        "relevance": 1.0,
+        "latency_ms": 4191.407799997251,
+        "answer": "The s-block elements are the elements of Group 1 (alkali metals) and Group 2 (alkaline earth metals) which have ns1 and ns2 outermost electronic configurations. They are classified based on the type of atomic orbitals that are being filled with electrons."
+      },
+      "advanced": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 1.0,
+        "relevance": 1.0,
+        "latency_ms": 9830.910099997709,
+        "answer": "The s-Block Elements are the elements of Group 1 (alkali metals) and Group 2 (alkaline earth metals). They have ns1 and ns2 outermost electronic configurations."
+      }
+    },
+    {
+      "query": "What is atomic radius and how does it change across a period?",
+      "naive": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 0.3,
+        "relevance": 0.5,
+        "latency_ms": 6078.194900001108,
+        "answer": "Atomic radius refers to either the covalent or metallic radius of an element, depending on whether it is a non-metal or a metal. It is the size of an atom, which is very small (~1.2 \u00c5) and difficult to determine due to the electron cloud not having a sharp boundary. Atomic radii can be measured by X-ray or other spectroscopic methods.\n\nThe provided context states that there are \"two obvious trends\" in atomic radii that can be explained by nuclear charge and energy level, but it does not explicitly describe how atomic radius changes across a period."
+      },
+      "advanced": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 0.3,
+        "relevance": 1.0,
+        "latency_ms": 11194.398500003444,
+        "answer": "Atomic Radius refers to both covalent or metallic radius, depending on whether the element is a non-metal or a metal. It can be measured by X-ray or other spectroscopic methods. Finding the size of an atom is complicated because atoms are very small (~ 1.2 \u00c5) and their electron clouds do not have sharp boundaries, making precise determination difficult.\n\nThe atomic size generally decreases across a period."
+      }
+    },
+    {
+      "query": "What is ionization energy and what factors affect it?",
+      "naive": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 0.8,
+        "relevance": 0.7,
+        "latency_ms": 5808.9835999999195,
+        "answer": "Ionization enthalpy represents the energy required to remove an electron from an isolated gaseous atom in its ground state.\n\nFactors affecting it include:\n*   Closed electron shells and very stable electron configurations.\n*   Shielding or screening of the valence electron from the nucleus by intervening core electrons.\n*   The effectiveness of shielding, which occurs when the orbitals in the inner shells are completely filled."
+      },
+      "advanced": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 0.4,
+        "relevance": 1.0,
+        "latency_ms": 15088.359200002742,
+        "answer": "Ionization enthalpy, also referred to as ionization energy, is the energy required to remove an electron from an isolated gaseous atom (X) in its ground state. The first ionization enthalpy for an element X is the enthalpy change (\u2206i H) for the reaction: X(g) \u2192 X+(g) + e\u2013. It is expressed in units of kJ m.\n\nFactors that affect ionization enthalpy include:\n*   **General Trends:** It generally increases as we go across a period and decreases as we descend in a group.\n*   **Electron Configuration:** Elements with closed electron shells and very stable electron configurations, such as noble gases, have maxima in ionization enthalpy. Alkali metals, with single outermost ns-electrons preceded by a noble gas electronic configuration, have low ionization enthalpies.\n*   **Type of Electron and Penetration:** An s-electron is attracted to the nucleus more than a p-electron within the same principal quantum level. For example, the electron removed during ionization of beryllium is an s-electron, while for boron it is a p-electron, leading to boron having a slightly less first ionization enthalpy despite a greater nuclear charge. The penetration of a 2s-electron to the nucleus is more.\n*   **Shielding or Screening Effect:** Intervening core electrons shield or screen the valence electron from the nucleus. Shielding is effective when the orbitals in the inner shells are completely filled, as seen in alkali metals."
+      }
+    },
+    {
+      "query": "What are noble gases and why are they inert?",
+      "naive": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 0.6,
+        "relevance": 0.9,
+        "latency_ms": 6159.99870000087,
+        "answer": "Noble gases are elements found at the end of each period. They have a closed valence shell with an ns2np6 configuration, and all the orbitals in their valence shell are completely filled."
+      },
+      "advanced": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 0.4,
+        "relevance": 1.0,
+        "latency_ms": 13566.088700004912,
+        "answer": "Noble gases are elements found at the end of each period, specifically Group 18, with a closed valence shell configuration (ns2np6). Helium is an exception with a 1s2 configuration, but it also has a completely filled valence shell.\n\nThey are inert because all the orbitals in their valence shell are completely filled by electrons, creating a very stable arrangement that is difficult to alter by the addition or removal of electrons."
+      }
+    },
+    {
+      "query": "What is electronegativity and how does it trend across periods?",
+      "naive": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 0.0,
+        "relevance": 0.5,
+        "latency_ms": 3853.8214000000153,
+        "answer": "The provided context does not define electronegativity. However, it states that electronegativity increases across a period from left to right."
+      },
+      "advanced": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 0.8,
+        "relevance": 0.5,
+        "latency_ms": 10784.995599999093,
+        "answer": "The provided context does not explicitly define electronegativity. However, it states that electronegativity increases across a period from left to right. This increase in electronegativities across a period is accompanied by an increase in non-metallic properties (or decrease in metallic properties) of elements. The attraction between the outer (or valence) electrons and the nucleus increases as the atomic radius decreases in a period, and the electronegativity also increases."
+      }
+    },
+    {
+      "query": "What is an LLM fine-tuning pipeline and what hardware is required?",
+      "naive": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 0.7,
+        "relevance": 0.0,
+        "latency_ms": 6861.591599998064,
+        "answer": "The context describes a \"Self-Healing Hybrid RAG Implementation Blueprint,\" which is a 4-Phase System Architecture Plan using LangChain, LangGraph, Gemini, and Neo4j. It includes an Embedding Layer for document processing, vectorization, and storage, and a LangGraph Self-Correction State Engine. It leverages models like gemini-embedding-2-preview, gemini-2.5-flash, and gemini-2.5-pro.\n\nThe context does not specify any hardware requirements."
+      },
+      "advanced": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 1.0,
+        "relevance": 0.9,
+        "latency_ms": 24468.751899999916,
+        "answer": "The provided context describes the objective of an LLM fine-tuning and alignment plan, which is \"To deploy a production-grade, memory-optimized training and alignment pipeline for an 8B parameter model specialized in human-fidelity, plagiarism-free academic literature generation.\" It also states that this plan addresses \"data contamination, gradient instability, reward-scaling asymmetry, and policy-collapse risks under strict resource constraints.\" However, the context does not explicitly define what an LLM fine-tuning pipeline *is* in terms of its components or process.\n\nRegarding hardware, the infrastructure is configured for \"Kaggle's free-tier environment: 30 hours/week of Dual N\". The full specification of \"Dual N\" is cut off in the provided text."
+      }
+    },
+    {
+      "query": "What is the objective of the hardened 3-day LLM alignment plan?",
+      "naive": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 0.5,
+        "relevance": 1.0,
+        "latency_ms": 2681.026299993391,
+        "answer": "The objective is to deploy a production-grade, memory-optimized training and alignment pipeline for an 8B parameter model specialized in human-fidelity, plagiarism-free academic literature generation, addressing data contamination, gradient instability, reward-scaling asymmetry, and policy-collapse risks under strict resource constraints."
+      },
+      "advanced": {
+        "hit": true,
+        "rr": 1.0,
+        "faithfulness": 0.5,
+        "relevance": 1.0,
+        "latency_ms": 11128.374699997948,
+        "answer": "The objective of the hardened 3-day LLM alignment plan is to deploy a production-grade, memory-optimized training and alignment pipeline for an 8B parameter model specialized in human-fidelity, plagiarism-free academic literature generation. This plan addresses data contamination, gradient instability, reward-scaling asymmetry, and policy-collapse risks under strict resource constraints."
+      }
+    }
+  ]
+}

@@ -1,12 +1,10 @@
-from typing import List, Dict, Any, TypedDict
+﻿from typing import List, TypedDict
+from langchain_core.documents import Document
 
 class RAGState(TypedDict):
-    """centralized graph memory state schema for the sel-healing Hybrid RAG
-    pipeline. Tracks context properties across intermediate evaluation
-    and execution paths"""
-
     question: str
-    documents: List[Dict[str, Any]]
+    sub_queries: List[str]      # FIXED: Track decomposed search queries
+    hyde_context: str           # FIXED: Store hypothetical answer text explicitly
+    documents: List[Document]
     generation: str
     steps: List[str]
-    

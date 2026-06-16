@@ -1,4 +1,4 @@
-﻿import os
+import os
 import sys
 import json
 from typing import Literal, Dict, Any
@@ -24,7 +24,7 @@ def decide_to_generate(state: RAGState) -> Literal["generate", "web_search"]:
     docs = state.get("documents", [])
     
     if not docs or len(docs) == 0:
-        print("[➔] Decision: Document payload empty. Routing to Fallback Web Search.")
+        print("[->] Decision: Document payload empty. Routing to Fallback Web Search.")
         return "web_search"
     
     # Extract the leading context item
@@ -43,7 +43,7 @@ def decide_to_generate(state: RAGState) -> Literal["generate", "web_search"]:
         print(f"[!] Edge Evaluator: Best chunk score ({best_score:.4f}) is below acceptable floor ({CRITICAL_SCORE_FLOOR}). Triggering Escape Hatch!")
         return "web_search"
         
-    print(f"[➔] Decision: Valid context identified (Score: {best_score:.4f}). Routing to Generation Node.")
+    print(f"[->] Decision: Valid context identified (Score: {best_score:.4f}). Routing to Generation Node.")
     return "generate"
 
 def grade_generation_v_documents(state: RAGState) -> Literal["useful", "not useful"]:
