@@ -1,19 +1,28 @@
-version: '3.8'
-
-services:
+﻿services:
   neo4j:
     image: neo4j:5.12.0-community
     container_name: self_healing_neo4j
     ports:
-      - "7474:7474" # Neo4j Browser Web Interface Dashboard
-      - "7687:7687" # Bolt Protocol database connection port
+      - "7474:7474"
+      - "7687:7687"
     volumes:
-      - neo4j_data:/data
-      - neo4j_logs:/logs
+      - neo4j_data_prod:/data
+      - neo4j_logs_prod:/logs
     environment:
-      - NEO4J_AUTH=neo4j/password123 # Core database credentials
-      - NEO4J_PLUGINS=["apoc"]         # Enable Advanced Path Ingestion utilities
+      - NEO4J_AUTH=neo4j/password123
+      - NEO4J_PLUGINS=["apoc"]
+    restart: always
+
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: self_healing_chroma_server
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma_data_prod:/chroma/chroma
+    restart: always
 
 volumes:
-  neo4j_data:
-  neo4j_logs:
+  neo4j_data_prod:
+  neo4j_logs_prod:
+  chroma_data_prod:

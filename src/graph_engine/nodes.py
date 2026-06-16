@@ -1,6 +1,7 @@
 ﻿import os
 import sys
 import json
+import asyncio
 from typing import Dict, List, Any
 from dotenv import load_dotenv
 
@@ -17,6 +18,63 @@ from langchain_core.documents import Document
 
 load_dotenv(dotenv_path=os.getenv("DOTENV_PATH", "config/.env"))
 
+class QueryDecompositionEngine:
+    def __init__(self):
+        print("[*] Initializing Phase 3: Query Decomposition Layer...")
+        self.llm = ChatGoogleGenerativeAI(
+            model=os.getenv("GENERATION_MODEL", "gemini-2.5-flash"),
+            temperature=0.0,
+            google_api_key=os.getenv("GOOGLE_API_KEY")
+        )
+        self.prompt = ChatPromptTemplate.from_messages([
+            ("system", (
+                "You are an advanced query deconstruction model.\n"
+                "Your job is to analyze an incoming user query. If it contains multiple distinct "
+                "technical topics, questions, or cross-phase dependencies, break it down into a list of "
+                "2 to 3 simplified, individual sub-queries optimized for a search index.\n"
+                "Respond strictly with a raw JSON array of strings. Do not include markdown code block wrappers."
+            )),
+            ("human", "{query}")
+        ])
+        self.chain = self.prompt | self.llm | StrOutputParser()
+
+    def decompose(self, query: str) -> List[str]:
+        print(f"[*] Analyzing structural complexity of input query...")
+        try:
+            raw_output = self.chain.invoke({"query": query}).strip()
+            cleaned = raw_output.replace("```json", "").replace("```", "").strip()
+            sub_queries = json.loads(cleaned)
+            print(f"[+] Query split into sub-tasks: {sub_queries}")
+            return sub_queries
+        except Exception as e:
+            print(f"[!] Target decomposition failed ({str(e)}). Proceeding with raw query vector.")
+            return [query]
+
+
+class HyDEGenerator:
+    def __init__(self):
+        print("[*] Initializing Phase 3: HyDE Optimization Layer...")
+        self.llm = ChatGoogleGenerativeAI(
+            model=os.getenv("GENERATION_MODEL", "gemini-2.5-flash"),
+            temperature=0.6,
+            google_api_key=os.getenv("GOOGLE_API_KEY")
+        )
+        self.prompt = ChatPromptTemplate.from_messages([
+            ("system", (
+                "You are an expert enterprise systems architect and technical writer.\n"
+                "Write a highly detailed, idealized technical passage that perfectly answers the user's question.\n"
+                "Do not include introductory commentary—output ONLY the direct, "
+                "hypothetical technical response payload text."
+            )),
+            ("human", "{question}")
+        ])
+        self.chain = self.prompt | self.llm | StrOutputParser()
+
+    def generate_hypothetical_document(self, question: str) -> str:
+        print(f"[*] HyDE: Generating optimized target semantic answer text...")
+        return self.chain.invoke({"question": question}).strip()
+
+
 class QueryTransformEngine:
     def __init__(self):
         print("[*] Initializing Query Transformation Optimization Layer...")
@@ -29,10 +87,7 @@ class QueryTransformEngine:
             ("system", (
                 "You are an expert search optimization engine.\n"
                 "Your task is to analyze an incoming user query, fix typos, and optimize it for a vector database.\n"
-                "You must respond strictly with a valid JSON object containing exactly two keys:\n"
-                "1. 'optimized_query': The polished, semantically rich string for search retrieval.\n"
-                "2. 'reasoning': A brief explanation of what structural changes or corrections you made and why.\n\n"
-                "Do not include markdown code block wrappers (like ```json) in your response. Output raw JSON text."
+                "Respond strictly with a valid JSON object containing exactly 'optimized_query' and 'reasoning' keys."
             )),
             ("human", "{raw_query}")
         ])
@@ -41,7 +96,6 @@ class QueryTransformEngine:
     def transform(self, raw_query: str) -> Dict[str, str]:
         print(f"[*] Original Query: '{raw_query}'")
         raw_output = self.chain.invoke({"raw_query": raw_query}).strip()
-        
         try:
             cleaned = raw_output.replace("```json", "").replace("```", "").strip()
             parsed = json.loads(cleaned)
@@ -68,22 +122,21 @@ class PrecisionRetrievalEngine:
             if hf_token is not None: os.environ["HF_TOKEN"] = hf_token
             if hf_hub_token is not None: os.environ["HUGGINGFACE_HUB_TOKEN"] = hf_hub_token
 
-    def retrieve_and_rerank(self, question: str) -> List[Document]:
-        print(f"\n[*] Stage 1: Over-retrieving context frames (k=15)...")
+    async def async_vector_retrieve(self, question: str) -> List[Document]:
+        """Runs the semantic vector over-retrieval loop inside an async thread pool."""
+        loop = asyncio.get_event_loop()
         retriever = self.chroma_client.get_retriever(search_kwargs={"k": 15})
-        initial_docs = retriever.invoke(question)
+        # Offload synchronous LangChain network I/O to thread pool
+        return await loop.run_in_executor(None, retriever.invoke, question)
 
+    def rerank_cache(self, question: str, initial_docs: List[Document]) -> List[Document]:
+        """Applies Cross-Encoder scaling weights over fused hits."""
         if not initial_docs:
-            print("[!] Warn: Vector search returned 0 documents.")
             return []
-        
         pairs = [[question, doc.page_content] for doc in initial_docs]
-        print("[*] Stage 2: Running cross-encoder pass to score contextual relevance...")
         scores = self.re_ranker.predict(pairs)
-
         for idx, score in enumerate(scores):
             initial_docs[idx].metadata["score"] = float(score)
-            
         return initial_docs
 
 
@@ -97,15 +150,12 @@ class DynamicWebSearchEngine:
         print(f"[*] Dispatching live web scraper payload for query: '{query}'...")
         try:
             raw_web_results = self.search_tool.invoke(query)
-            
-            healed_context = [Document(
+            return [Document(
                 page_content=str(raw_web_results),
-                metadata={"title": "Live Web Search Result", "score": 10.0}  # Force anchor high priority
+                metadata={"title": "Live Web Search Result", "score": 10.0}
             )]
-            print("[+] Live web lookup execution finalized successfully.")
-            return healed_context
         except Exception as e:
-            print(f"[!] Critical Error: Web fallback breakout failed ({str(e)}). Returning empty frame.")
+            print(f"[!] Critical Error: Web fallback breakout failed ({str(e)}).")
             return []
 
 
@@ -118,16 +168,10 @@ class ContextualGenerationEngine:
             temperature=0.2,
             google_api_key=os.getenv("GOOGLE_API_KEY")
         )
-        
         self.prompt_template = ChatPromptTemplate.from_messages([
             ("system", (
                 "You are an advanced, deterministic enterprise synthesis engine.\n"
-                "Your task is to answer the user's question using the provided reference context facts.\n"
-                "This context contains information retrieved from either internal system documentation, "
-                "relational knowledge graphs, or real-time live web search results.\n\n"
-                "Review the context facts carefully and synthesize a clear response answering the query. "
-                "If the context does not contain enough information to answer, explicitly state that you possess "
-                "insufficient data. Do not use outside assumptions.\n\n"
+                "Your task is to answer the user's question using the provided reference context facts.\n\n"
                 "=== PROVIDED REFERENCE CONTEXT ===\n{context}"
             )),
             ("human", "{question}")
@@ -139,9 +183,5 @@ class ContextualGenerationEngine:
         formatted_context_blocks = []
         for idx, frame in enumerate(context_frames):
             title = frame.metadata.get('title', 'Data Stream')
-            formatted_context_blocks.append(
-                f"--- Reference Source {idx + 1}: {title} ---\n"
-                f"{frame.page_content}"
-            )
-        unified_context_string = "\n\n".join(formatted_context_blocks)
-        return self.chain.invoke({"question": question, "context": unified_context_string})
+            formatted_context_blocks.append(f"--- Reference Source {idx + 1}: {title} ---\n{frame.page_content}")
+        return self.chain.invoke({"question": question, "context": "\n\n".join(formatted_context_blocks)})

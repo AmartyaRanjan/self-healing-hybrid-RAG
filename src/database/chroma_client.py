@@ -1,47 +1,55 @@
-import os
+﻿import os
 from typing import List, Dict, Any
 from dotenv import load_dotenv
+import chromadb
 from langchain_chroma import Chroma
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
-load_dotenv(dotenv_path = os.path.join(os.path.dirname(__file__), "../../config/.env"))
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "../../config/.env"))
 
 class ChromaVectorClient:
-    def __init__ (self, collection_name: str = "self_healing_rag_docs"):
-        #Retrieve target storage variables from the environment
-        db_path = os.getenv("CHROMA_DB_PATH", "./chroma_storage")
-        #the embedding model that we are going to use
+    def __init__(self, collection_name: str = "self_healing_rag_docs"):
+        # Retrieve target engine configurations from environment with clean defaults
         model_name = os.getenv("EMBEDDING_MODEL", "gemini-embedding-2-preview")
+        chroma_host = os.getenv("CHROMA_HOST", "localhost")
+        chroma_port = int(os.getenv("CHROMA_PORT", 8000))
+        
         print(f"[*] Initializing Google Generative AI Embeddings: {model_name}...")
-        self.embeddings = GoogleGenerativeAIEmbeddings(  # FIX: was self.emebddings (typo)
+        self.embeddings = GoogleGenerativeAIEmbeddings(
             model=model_name,
             google_api_key=os.getenv("GOOGLE_API_KEY")
         )
 
-        print(f"[*] Connecting to ChromaDB at {db_path}...")
-        #connect the LangChain Chroma wrapper to persistent storage
-        self.vector_store = Chroma(  # FIX: was self.client — but get_retriever() calls self.vector_store
+        # FIXED FOR CONCURRENCY: Connecting via HttpClient network socket instead of SQLite file locks
+        print(f"[*] Connecting to Distributed Chroma Server at http://{chroma_host}:{chroma_port}...")
+        self.chroma_http_client = chromadb.HttpClient(host=chroma_host, port=chroma_port)
+        self.collection_name = collection_name
+
+        # Bind the LangChain wrapper client interface to the living server pool
+        self.vector_store = Chroma(
+            client=self.chroma_http_client,
             collection_name=collection_name,
-            embedding_function=self.embeddings,  # FIX: was self.emebddings (typo)
-            persist_directory=db_path
+            embedding_function=self.embeddings
         )
 
     def add_documents(self, finalized_chunks: List[Dict[str, Any]]):
-        """Embeds full context payloads and stores them inside
-        the local Chroma vector indices database instance"""
-        print(f"[*] Vectorizing and uploading {len(finalized_chunks)} structural chunks to Chroma DB ...")  # FIX: was len(finalized_chunks)"} — misplaced quote and brace
-        texts = [chunk["page_content"] for chunk in finalized_chunks]        # FIX: was chunks[...] and finlize_chunks (wrong var names)
-        metadatas = [chunk["metadata"] for chunk in finalized_chunks]         # FIX: was chunks["metadata"]["chunk_id"] — metadatas must be full dicts, not strings
-        ids = [chunk["metadata"]["chunk_id"] for chunk in finalized_chunks]   # FIX: ids was referenced but never defined
+        """
+        UNTOUCHED LOGIC: Embeds full context payloads and stores them inside 
+        the server-backed Chroma vector indices database instance.
+        """
+        print(f"[*] Vectorizing and uploading {len(finalized_chunks)} structural chunks to Chroma DB ...")
+        texts = [chunk["page_content"] for chunk in finalized_chunks]
+        metadatas = [chunk["metadata"] for chunk in finalized_chunks]
+        ids = [chunk["metadata"]["chunk_id"] for chunk in finalized_chunks]
 
-        #execute batch upload and vector computation
-        self.vector_store.add_texts(texts=texts, metadatas=metadatas, ids=ids)  # FIX: was self.client (renamed to self.vector_store)
-        print("[*] Chroma DB indexing successfully accomplished")
+        # Execute cluster batch upload over HTTP endpoint
+        self.vector_store.add_texts(texts=texts, metadatas=metadatas, ids=ids)
+        print("[*] Chroma DB indexing successfully accomplished.")
 
-    def get_retriever(self, search_kwargs: Dict[str, Any]=None):
-        """returns a standardized LangChain Retriever interface."""
+    def get_retriever(self, search_kwargs: Dict[str, Any] = None):
+        """Returns a standardized LangChain Retriever interface."""
         if search_kwargs is None:
-            search_kwargs = {"k": 5}  # FIX: comment said top 5 but default was 15
+            search_kwargs = {"k": 5}
         return self.vector_store.as_retriever(
             search_type="similarity",
             search_kwargs=search_kwargs
