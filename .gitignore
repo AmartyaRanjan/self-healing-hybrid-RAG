@@ -12,6 +12,21 @@ neo4j_data/
 .env
 config/.env
 
+# But allow example templates to be committed
+!.env.example
+!config/.env.example
+
 # Local document inputs/outputs
 *.pdf
 processed_chunks/
+
+# Runtime uploads and generated outputs
+uploads/
+chroma_storage/
+eval_results.json
+eval_report.md
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store

@@ -91,7 +91,11 @@ docker-compose up -d
 ```
 
 ### 3. Environment Configuration
-Create/verify the `config/.env` file in the project root:
+Copy the example environment file and fill in your values:
+```bash
+cp config/.env.example config/.env
+```
+Edit `config/.env` with your Google Gemini API key and database credentials:
 ```env
 GOOGLE_API_KEY=your_gemini_api_key_here
 CHROMA_DB_PATH=./chroma_storage
