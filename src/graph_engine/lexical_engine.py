@@ -2,10 +2,18 @@
 from typing import List
 from rank_bm25 import BM25Okapi
 from langchain_core.documents import Document
+from src.logger import get_logger
+
+logger = get_logger(__name__)
 
 class LexicalHighwayEngine:
     def __init__(self):
-        print("[*] Initializing Phase 4.1: High-Speed Lexical Highway (RankBM25)...")
+        logger.info("Initializing lexical highway (BM25)")
+        self.bm25 = None
+        self.raw_documents = []
+
+    def reset(self):
+        """Clears the BM25 index and raw documents so each retrieval pass starts fresh."""
         self.bm25 = None
         self.raw_documents = []
 
@@ -20,7 +28,7 @@ class LexicalHighwayEngine:
         # Simple lowercase word tokenization
         tokenized_corpus = [self._tokenize(doc.page_content) for doc in documents]
         self.bm25 = BM25Okapi(tokenized_corpus)
-        print(f"[+] Lexical Highway successfully indexed {len(documents)} context frames.")
+        logger.info("Lexical highway indexed %d context frames", len(documents))
 
     def _tokenize(self, text: str) -> List[str]:
         return re.sub(r'[^\w\s]', '', text.lower()).split()
@@ -47,5 +55,5 @@ class LexicalHighwayEngine:
                 matched_docs.append(doc)
                 
         if matched_docs:
-            print(f"[+] Lexical Highway matched {len(matched_docs)} frames via keyword overlap.")
+            logger.info("Lexical highway matched %d frames via keyword overlap", len(matched_docs))
         return matched_docs

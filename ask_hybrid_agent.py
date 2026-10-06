@@ -59,7 +59,8 @@ class HybridGraphRAGAgent:
             "question": user_query,
             "documents": [],  # Container initialized cleanly
             "generation": "",
-            "steps": []
+            "steps": [],
+            "healing_iterations": 0
         }
         
         # FIXED: Wrap the extracted Neo4j triples into a true LangChain Document instance object
