@@ -102,8 +102,10 @@ def retrieve_node(state: RAGState) -> Dict[str, Any]:
             
     all_raw_vector_hits = chroma_context_frames + additional_frames
     
-    # Ensure our local keyword lexical highway indexes the raw context pool
-    if len(all_raw_vector_hits) > 0 and not lexical_highway.bm25:
+    # Reset the lexical highway so each retrieval pass (including self-healing
+    # loop iterations) builds a fresh index from the current query's hits.
+    lexical_highway.reset()
+    if len(all_raw_vector_hits) > 0:
         lexical_highway.initialize_index(all_raw_vector_hits)
         
     lexical_hits = lexical_highway.search(question, top_n=2)

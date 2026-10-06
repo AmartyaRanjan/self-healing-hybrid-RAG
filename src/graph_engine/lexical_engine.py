@@ -9,6 +9,11 @@ class LexicalHighwayEngine:
         self.bm25 = None
         self.raw_documents = []
 
+    def reset(self):
+        """Clears the BM25 index and raw documents so each retrieval pass starts fresh."""
+        self.bm25 = None
+        self.raw_documents = []
+
     def initialize_index(self, documents: List[Document]):
         """
         Tokenizes text frames and fits the BM25 statistical matrix locally in memory.
