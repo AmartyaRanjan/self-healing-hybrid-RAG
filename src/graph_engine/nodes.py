@@ -15,13 +15,16 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_community.tools import DuckDuckGoSearchRun
 from langchain_community.utilities import DuckDuckGoSearchAPIWrapper
 from langchain_core.documents import Document
+from src.logger import get_logger
+
+logger = get_logger(__name__)
 
 default_dotenv = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../config/.env")
 load_dotenv(dotenv_path=os.getenv("DOTENV_PATH", os.path.normpath(default_dotenv)))
 
 class QueryDecompositionEngine:
     def __init__(self):
-        print("[*] Initializing Phase 3: Query Decomposition Layer...")
+        logger.info("Initializing query decomposition layer")
         self.llm = ChatGoogleGenerativeAI(
             model=os.getenv("GENERATION_MODEL", "gemini-2.5-flash"),
             temperature=0.0,
@@ -40,21 +43,21 @@ class QueryDecompositionEngine:
         self.chain = self.prompt | self.llm | StrOutputParser()
 
     def decompose(self, query: str) -> List[str]:
-        print(f"[*] Analyzing structural complexity of input query...")
+        logger.info("Analyzing structural complexity of input query")
         try:
             raw_output = self.chain.invoke({"query": query}).strip()
             cleaned = raw_output.replace("```json", "").replace("```", "").strip()
             sub_queries = json.loads(cleaned)
-            print(f"[+] Query split into sub-tasks: {sub_queries}")
+            logger.info("Query split into sub-tasks: %s", sub_queries)
             return sub_queries
         except Exception as e:
-            print(f"[!] Target decomposition failed ({str(e)}). Proceeding with raw query vector.")
+            logger.warning("Decomposition failed (%s). Using raw query.", str(e))
             return [query]
 
 
 class HyDEGenerator:
     def __init__(self):
-        print("[*] Initializing Phase 3: HyDE Optimization Layer...")
+        logger.info("Initializing HyDE optimization layer")
         self.llm = ChatGoogleGenerativeAI(
             model=os.getenv("GENERATION_MODEL", "gemini-2.5-flash"),
             temperature=0.6,
@@ -72,13 +75,13 @@ class HyDEGenerator:
         self.chain = self.prompt | self.llm | StrOutputParser()
 
     def generate_hypothetical_document(self, question: str) -> str:
-        print(f"[*] HyDE: Generating optimized target semantic answer text...")
+        logger.info("Generating HyDE hypothetical document")
         return self.chain.invoke({"question": question}).strip()
 
 
 class QueryTransformEngine:
     def __init__(self):
-        print("[*] Initializing Query Transformation Optimization Layer...")
+        logger.info("Initializing query transformation layer")
         self.llm = ChatGoogleGenerativeAI(
             model=os.getenv("GENERATION_MODEL", "gemini-2.5-flash"),
             temperature=0.1,
@@ -95,25 +98,25 @@ class QueryTransformEngine:
         self.chain = self.prompt | self.llm | StrOutputParser()
 
     def transform(self, raw_query: str) -> Dict[str, str]:
-        print(f"[*] Original Query: '{raw_query}'")
+        logger.info("Original query: %s", raw_query)
         raw_output = self.chain.invoke({"raw_query": raw_query}).strip()
         try:
             cleaned = raw_output.replace("```json", "").replace("```", "").strip()
             parsed = json.loads(cleaned)
-            print(f"[->] Transformation Reasoning: {parsed.get('reasoning')}")
-            print(f"[+] Transformed Search Query: '{parsed.get('optimized_query')}'")
+            logger.info("Transformation reasoning: %s", parsed.get('reasoning'))
+            logger.info("Transformed query: %s", parsed.get('optimized_query'))
             return parsed
         except Exception as e:
-            print(f"[!] Warning: Query transform parsing failed ({str(e)}). Falling back to raw text input.")
+            logger.warning("Query transform parsing failed (%s). Using raw query.", str(e))
             return {"optimized_query": raw_query, "reasoning": "Fallback due to parsing error."}
 
 
 class PrecisionRetrievalEngine:
     def __init__(self):
-        print("[*] Connecting to Chroma Vector Client for retrieval indexing...")
+        logger.info("Connecting to Chroma vector client")
         self.chroma_client = ChromaVectorClient()
         model_name = "cross-encoder/ms-marco-MiniLM-L-6-v2"
-        print(f"[*] Initializing localized Cross-Encoder pass: {model_name}...")
+        logger.info("Initializing cross-encoder: %s", model_name)
         
         hf_token = os.environ.pop("HF_TOKEN", None)
         hf_hub_token = os.environ.pop("HUGGINGFACE_HUB_TOKEN", None)
@@ -148,12 +151,12 @@ class PrecisionRetrievalEngine:
 
 class DynamicWebSearchEngine:
     def __init__(self):
-        print("[*] Initializing Live DuckDuckGo API Search Engine...")
+        logger.info("Initializing DuckDuckGo web search engine")
         wrapper = DuckDuckGoSearchAPIWrapper(max_results=3)
         self.search_tool = DuckDuckGoSearchRun(api_wrapper=wrapper)
 
     def search(self, query: str) -> List[Document]:
-        print(f"[*] Dispatching live web scraper payload for query: '{query}'...")
+        logger.info("Dispatching web search for query: %s", query)
         try:
             raw_web_results = self.search_tool.invoke(query)
             return [Document(
@@ -161,14 +164,14 @@ class DynamicWebSearchEngine:
                 metadata={"title": "Live Web Search Result", "score": 10.0}
             )]
         except Exception as e:
-            print(f"[!] Critical Error: Web fallback breakout failed ({str(e)}).")
+            logger.error("Web search failed: %s", str(e))
             return []
 
 
 class ContextualGenerationEngine:
     def __init__(self):
         model_name = os.getenv("GENERATION_MODEL", "gemini-2.5-flash")
-        print(f"[*] Initializing Contextual Generation Engine via : {model_name}...")
+        logger.info("Initializing contextual generation engine: %s", model_name)
         self.llm = ChatGoogleGenerativeAI(
             model=model_name,
             temperature=0.2,
@@ -185,7 +188,7 @@ class ContextualGenerationEngine:
         self.chain = self.prompt_template | self.llm | StrOutputParser()
 
     def generate_response(self, question: str, context_frames: List[Document]) -> str:
-        print("[*] Harmonizing context frames and invoking Gemini generation chain ...")
+        logger.info("Harmonizing context frames and invoking generation")
         formatted_context_blocks = []
         for idx, frame in enumerate(context_frames):
             title = frame.metadata.get('title', 'Data Stream')

@@ -8,6 +8,9 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from src.graph_engine.state import RAGState
+from src.logger import get_logger
+
+logger = get_logger(__name__)
 
 MAX_HEALING_ITERATIONS = 3
 
@@ -22,11 +25,11 @@ def decide_to_generate(state: RAGState) -> Literal["generate", "web_search"]:
     Evaluates context viability across disparate dictionary structures and LangChain Document 
     objects. Routes to 'web_search' if the highest context score indicates irrelevant noise.
     """
-    print("[*] Edge Evaluator: Assessing document context payload density...")
+    logger.info("Assessing document context payload density")
     docs = state.get("documents", [])
     
     if not docs or len(docs) == 0:
-        print("[->] Decision: Document payload empty. Routing to Fallback Web Search.")
+        logger.info("Document payload empty. Routing to fallback web search.")
         return "web_search"
     
     # Extract the leading context item
@@ -42,23 +45,23 @@ def decide_to_generate(state: RAGState) -> Literal["generate", "web_search"]:
     CRITICAL_SCORE_FLOOR = -3.0
     
     if best_score < CRITICAL_SCORE_FLOOR:
-        print(f"[!] Edge Evaluator: Best chunk score ({best_score:.4f}) is below acceptable floor ({CRITICAL_SCORE_FLOOR}). Triggering Escape Hatch!")
+        logger.warning("Best chunk score %.4f below floor %.4f. Triggering web search.", best_score, CRITICAL_SCORE_FLOOR)
         return "web_search"
-        
-    print(f"[->] Decision: Valid context identified (Score: {best_score:.4f}). Routing to Generation Node.")
+
+    logger.info("Valid context identified (score: %.4f). Routing to generation.", best_score)
     return "generate"
 
 def grade_generation_v_documents(state: RAGState) -> Literal["useful", "not useful"]:
     """
     Acts as an Anti-Hallucination Guardrail verifying output factual grounding.
     """
-    print("[*] Edge Evaluator: Executing rigorous hallucination and grounding audit...")
+    logger.info("Executing hallucination and grounding audit")
     documents = state.get("documents", [])
     generation = state.get("generation", "")
     healing_iterations = state.get("healing_iterations", 0)
 
     if healing_iterations >= MAX_HEALING_ITERATIONS:
-        print(f"[!] Max healing iterations ({MAX_HEALING_ITERATIONS}) reached. Breaking loop to prevent infinite cycle.")
+        logger.warning("Max healing iterations (%d) reached. Breaking loop.", MAX_HEALING_ITERATIONS)
         return "useful"
 
     if not generation:
@@ -93,11 +96,11 @@ def grade_generation_v_documents(state: RAGState) -> Literal["useful", "not usef
         parsed = json.loads(cleaned)
         
         if parsed.get("score", "no").lower() == "yes":
-            print("[+] Audit Passed: Output is fully grounded. No hallucinations detected.")
+            logger.info("Audit passed: output is fully grounded")
             return "useful"
         else:
-            print("[!] Audit Failed: Output contains ungrounded claims.")
+            logger.warning("Audit failed: output contains ungrounded claims")
             return "not useful"
     except Exception as e:
-        print(f"[!] Grader parsing fault: {str(e)}. Defaulting to safety regeneration pass.")
+        logger.error("Grader parsing fault: %s. Defaulting to regeneration.", str(e))
         return "not useful"
