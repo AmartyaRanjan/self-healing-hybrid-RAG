@@ -8,3 +8,4 @@ class RAGState(TypedDict):
     documents: List[Document]
     generation: str
     steps: List[str]
+    healing_iterations: int     # Track self-healing loop count

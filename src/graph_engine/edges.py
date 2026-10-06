@@ -9,6 +9,8 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from src.graph_engine.state import RAGState
 
+MAX_HEALING_ITERATIONS = 3
+
 llm = ChatGoogleGenerativeAI(
     model=os.getenv("GENERATION_MODEL", "gemini-2.5-flash"),
     temperature=0.0,
@@ -53,7 +55,12 @@ def grade_generation_v_documents(state: RAGState) -> Literal["useful", "not usef
     print("[*] Edge Evaluator: Executing rigorous hallucination and grounding audit...")
     documents = state.get("documents", [])
     generation = state.get("generation", "")
-    
+    healing_iterations = state.get("healing_iterations", 0)
+
+    if healing_iterations >= MAX_HEALING_ITERATIONS:
+        print(f"[!] Max healing iterations ({MAX_HEALING_ITERATIONS}) reached. Breaking loop to prevent infinite cycle.")
+        return "useful"
+
     if not generation:
         return "not useful"
     

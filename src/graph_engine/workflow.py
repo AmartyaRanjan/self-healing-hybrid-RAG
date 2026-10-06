@@ -157,6 +157,7 @@ workflow.add_node("transform_query", transform_query_node)
 workflow.add_node("retrieve_docs", retrieve_node)
 workflow.add_node("generate_response", generate_node)
 workflow.add_node("fallback_web_search", fallback_search_node)
+workflow.add_node("increment_healing_iteration", increment_healing_iteration)
 
 workflow.add_edge(START, "decompose_query")
 workflow.add_edge("decompose_query", "hyde_optimization")
@@ -172,14 +173,20 @@ workflow.add_conditional_edges(
     }
 )
 workflow.add_edge("fallback_web_search", "generate_response")
+def increment_healing_iteration(state: RAGState) -> Dict[str, Any]:
+    iterations = state.get("healing_iterations", 0) + 1
+    print(f"[*] Self-healing iteration {iterations}")
+    return {"healing_iterations": iterations}
+
 workflow.add_conditional_edges(
     "generate_response",
     grade_generation_v_documents,
     {
         "useful": END,
-        "not useful": "retrieve_docs"
+        "not useful": "increment_healing_iteration"
     }
 )
+workflow.add_edge("increment_healing_iteration", "retrieve_docs")
 
 app = workflow.compile()
 print("[+] LangGraph State Machine compiled successfully with complete Phase 3 & 4 Optimization nodes.")

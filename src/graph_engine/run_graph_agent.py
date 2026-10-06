@@ -30,7 +30,8 @@ def main():
         "question": question,
         "documents": [],
         "generation": "",
-        "steps": []
+        "steps": [],
+        "healing_iterations": 0
     }
 
     try:
