@@ -22,6 +22,18 @@
       - chroma_data_prod:/chroma/chroma
     restart: always
 
+  app:
+    build: .
+    container_name: self_healing_rag_app
+    ports:
+      - "8080:8080"
+    env_file:
+      - config/.env
+    depends_on:
+      - neo4j
+      - chromadb
+    restart: unless-stopped
+
 volumes:
   neo4j_data_prod:
   neo4j_logs_prod:
